@@ -1,101 +1,85 @@
 import { useMemo, useState } from "react";
-import "../lumi-overrides.css";
-import { ArrowRight, Check, Heart, Home as HomeIcon, Lock, RotateCcw, Sparkles, Star, Wind, X } from "lucide-react";
+import {
+  BookOpen,
+  Check,
+  ChevronRight,
+  CircleAlert,
+  Lightbulb,
+  ListChecks,
+  Minus,
+  RotateCcw,
+  Send,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 
-// Design reminder: 별빛 구조대 루미 — storybook play, warm emotion, no HUD-first layout.
-// Math is the path-building action: choose numbers that satisfy 이상/이하.
+// Design reminder: quiet, precise study desk. Theory and practice stay visible;
+// no story, game economy, animated characters, or decorative game HUD.
 
-type Operator = "이상" | "이하";
-type Phase = "story" | "play" | "success" | "mistake" | "complete";
+type Section = "overview" | "range" | "rounding" | "practice";
+type Question = { id: number; tag: string; prompt: string; type: "choice" | "input"; options?: string[]; answer: string; explanation: string; hint: string };
 
-type Scene = {
-  title: string;
-  story: string;
-  bound: number;
-  operator: Operator;
-  numbers: number[];
-  safeMessage: string;
-  sky: "forest" | "cloud" | "home";
-};
-
-const scenes: Scene[] = [
-  { title: "첫 번째 별 조각", story: "폭풍이 지나간 숲에 별 조각이 떨어졌어. 루미가 집으로 갈 길을 밝혀 주자.", bound: 120, operator: "이상", numbers: [82, 120, 137, 96], safeMessage: "120과 137이 길을 밝혔어!", sky: "forest" },
-  { title: "구름 사이의 길", story: "바람이 더 세졌어. 낮은 구름길을 찾아야 루미가 무사히 건널 수 있어.", bound: 85, operator: "이하", numbers: [62, 85, 96, 110], safeMessage: "62와 85가 구름길을 만들었어!", sky: "cloud" },
-  { title: "집으로 가는 문", story: "마지막 문은 기준값을 꼭 기억하는 별빛 문이야. 루미의 집이 기다리고 있어.", bound: 300, operator: "이상", numbers: [249, 300, 318, 281], safeMessage: "300과 318이 마지막 문을 열었어!", sky: "home" },
+const questions: Question[] = [
+  { id: 1, tag: "이상·이하", prompt: "‘120 이상’인 수를 모두 고르세요.", type: "choice", options: ["112", "120", "127", "98"], answer: "120,127", explanation: "‘이상’은 기준 수를 포함하고 그보다 큰 수를 뜻해요. 따라서 120과 127이 해당합니다.", hint: "이상은 기준값을 포함해요." },
+  { id: 2, tag: "초과·미만", prompt: "‘85 미만’인 수를 고르세요.", type: "choice", options: ["85", "84", "90", "76"], answer: "84,76", explanation: "‘미만’은 기준 수를 포함하지 않고 그보다 작은 수를 뜻해요. 85는 포함하지 않습니다.", hint: "미만은 기준값을 포함하지 않아요." },
+  { id: 3, tag: "수직선", prompt: "수직선에서 ●  표시가 기준값에 있다면, 알맞은 표현은 무엇일까요?", type: "choice", options: ["이상 또는 이하", "초과 또는 미만", "반드시 초과", "어림값"], answer: "이상 또는 이하", explanation: "채워진 점은 기준값을 포함한다는 뜻이에요. 따라서 이상 또는 이하와 연결됩니다.", hint: "채워진 점은 기준값을 포함해요." },
+  { id: 4, tag: "올림", prompt: "438을 백의 자리까지 올림한 수를 입력하세요.", type: "input", answer: "500", explanation: "백의 자리까지 올림하면 백의 자리 아래 수를 모두 올려요. 438은 500이 됩니다.", hint: "백의 자리 아래에 38이 남아 있어요." },
+  { id: 5, tag: "버림", prompt: "764를 십의 자리까지 버림한 수를 입력하세요.", type: "input", answer: "760", explanation: "십의 자리까지 버림하면 일의 자리 4를 버려요. 764는 760이 됩니다.", hint: "십의 자리 아래인 일의 자리를 버려요." },
+  { id: 6, tag: "반올림", prompt: "3,650을 천의 자리까지 반올림한 수를 고르세요.", type: "choice", options: ["3,000", "3,600", "4,000", "3,700"], answer: "4000", explanation: "천의 자리 아래인 백의 자리가 6이므로 올려서 4,000이 됩니다.", hint: "반올림할 자리 바로 아래 숫자를 보세요." },
+  { id: 7, tag: "방법 선택", prompt: "사과를 한 상자에 10개씩 담습니다. 83개를 모두 담으려면 상자는 몇 개 필요할까요?", type: "choice", options: ["8개", "9개", "10개", "80개"], answer: "9개", explanation: "모두 담아야 하므로 부족하지 않게 올림합니다. 83은 80보다 크므로 9상자가 필요해요.", hint: "‘모두 담기’는 부족하면 안 되는 상황이에요." },
+  { id: 8, tag: "방법 선택", prompt: "학급 학생 287명의 대략적인 인원을 백의 자리까지 나타내려고 합니다. 어떤 방법이 알맞을까요?", type: "choice", options: ["올림", "버림", "반올림", "이상"], answer: "반올림", explanation: "대략적인 인원을 가장 가까운 값으로 나타내므로 반올림이 알맞아요. 287명은 약 300명입니다.", hint: "가장 가까운 값이 필요할 때 사용하는 방법을 생각해요." },
 ];
 
-function StoryArt({ sky, glow = 0 }: { sky: Scene["sky"]; glow?: number }) {
-  return (
-    <svg className="story-art" viewBox="0 0 720 460" preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="lumiSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1c2767" /><stop offset="0.62" stopColor="#4a4285" /><stop offset="1" stopColor="#f6a873" /></linearGradient>
-        <linearGradient id="lumiGround" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#233767" /><stop offset="1" stopColor="#112343" /></linearGradient>
-        <filter id="lumiGlow"><feGaussianBlur stdDeviation="7" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-      </defs>
-      <rect width="720" height="460" fill="url(#lumiSky)" />
-      <circle cx="585" cy="96" r="52" fill="#fff1c7" opacity=".93" filter="url(#lumiGlow)" /><circle cx="603" cy="84" r="52" fill="#554982" />
-      <g fill="#fff1c7" opacity=".85"><circle cx="87" cy="67" r="2" /><circle cx="160" cy="117" r="1.5" /><circle cx="267" cy="51" r="2" /><circle cx="389" cy="92" r="1.5" /><circle cx="501" cy="43" r="2" /><circle cx="663" cy="157" r="1.5" /><circle cx="47" cy="188" r="1.2" /></g>
-      <path d="M0 304 Q115 251 218 311 T421 287 T720 302 V460 H0Z" fill="#263664" opacity=".92" /><path d="M0 356 Q128 286 236 343 T465 335 T720 345 V460 H0Z" fill="url(#lumiGround)" />
-      <g opacity=".38" fill="#172b50"><path d="M45 340 l31-88 29 88z" /><path d="M133 340 l43-117 41 117z" /><path d="M550 341 l42-120 45 120z" /><path d="M633 340 l29-91 27 91z" /></g>
-      {sky === "cloud" && <g fill="#f6d3c1" opacity=".9"><path d="M0 228 C80 168 142 216 201 188 C267 157 315 208 375 183 C451 152 493 204 553 179 C620 151 678 193 720 163 V278 H0Z" /><path d="M0 270 C70 236 131 264 201 240 C287 213 346 264 420 236 C486 211 559 259 629 228 C673 209 704 224 720 218 V302 H0Z" opacity=".65" /></g>}
-      <g transform="translate(112 286)"><path d="M0 95 L50 22 L103 95Z" fill="#263a68" stroke="#9b9edb" strokeWidth="3" /><path d="M30 95 V62 H72 V95" fill="#ef9a78" /><path d="M41 62 Q51 47 61 62" fill="#ffdfad" /><path d="M29 30 L50 0 L75 30" fill="#f7bd79" /><circle cx="50" cy="26" r="7" fill="#fff1c7" filter="url(#lumiGlow)" /><path d="M50 7 V-18" stroke="#f7bd79" strokeWidth="3" /><circle cx="50" cy="-21" r="5" fill="#f9d67e" /></g>
-      <path d="M480 374 Q530 337 592 363 T720 350" fill="none" stroke="#f9d786" strokeWidth="4" opacity={0.22 + glow * .12} filter="url(#lumiGlow)" />
-      <g transform="translate(385 314)" filter="url(#lumiGlow)"><path d="M28 0 L36 20 L58 21 L41 35 L47 57 L28 44 L8 57 L14 35 L-3 21 L20 20Z" fill="#ffdf8b" /><circle cx="21" cy="27" r="3" fill="#3a326e" /><circle cx="35" cy="27" r="3" fill="#3a326e" /><path d="M23 35 Q28 41 34 35" fill="none" stroke="#3a326e" strokeWidth="2" strokeLinecap="round" /></g>
-      {glow > 0 && <g fill="#fff1ae" opacity={Math.min(0.9, glow * .18)} filter="url(#lumiGlow)"><circle cx="287" cy="303" r="5" /><circle cx="336" cy="337" r="4" /><circle cx="430" cy="286" r="5" /><circle cx="462" cy="328" r="3" /><circle cx="520" cy="307" r="4" /></g>}
-    </svg>
-  );
-}
+const theory = [
+  { id: "range", title: "수의 범위", tone: "blue", summary: "기준값을 포함하는지에 따라 범위를 말해요.", body: "이상과 이하는 기준값을 포함하고, 초과와 미만은 기준값을 포함하지 않아요.", examples: ["120 이상 → 120과 같거나 큰 수", "85 이하 → 85와 같거나 작은 수", "20 초과 → 20보다 큰 수", "40 미만 → 40보다 작은 수"] },
+  { id: "line", title: "수직선으로 나타내기", tone: "mint", summary: "채워진 점과 빈 점으로 경계값을 구분해요.", body: "기준값을 포함하면 채워진 점(●), 포함하지 않으면 빈 점(○)으로 표시해요.", examples: ["이상·이하 → ● 기준값 포함", "초과·미만 → ○ 기준값 제외"] },
+  { id: "round", title: "올림·버림·반올림", tone: "orange", summary: "필요한 자리까지 수를 간단하게 나타내요.", body: "올림은 부족하지 않게, 버림은 완전한 묶음만, 반올림은 가장 가까운 값으로 나타낼 때 사용해요.", examples: ["438을 백의 자리까지 올림 → 500", "764를 십의 자리까지 버림 → 760", "3,650을 천의 자리까지 반올림 → 4,000"] },
+];
 
-function LumiMark({ small = false }: { small?: boolean }) {
-  return <span className={small ? "lumi-mark lumi-mark--small" : "lumi-mark"}><span className="lumi-mark__star">★</span><span className="lumi-mark__eye lumi-mark__eye--a" /><span className="lumi-mark__eye lumi-mark__eye--b" /></span>;
+function NumberLine({ type }: { type: "included" | "excluded" }) {
+  return <div className="theory-line"><span>100</span><div className="theory-line__track"><i className={type === "included" ? "theory-line__safe theory-line__safe--right" : "theory-line__safe theory-line__safe--right theory-line__safe--excluded"} /><b className={type === "included" ? "theory-node theory-node--filled" : "theory-node theory-node--empty"} /></div><span>140</span></div>;
 }
 
 export default function Home() {
-  const [sceneIndex, setSceneIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>("story");
-  const [picked, setPicked] = useState<number[]>([]);
-  const [lives, setLives] = useState(3);
-  const [light, setLight] = useState(0);
-  const [mistakeValue, setMistakeValue] = useState<number | null>(null);
-  const [message, setMessage] = useState("");
-  const scene = scenes[sceneIndex];
-  const safeNumbers = useMemo(() => scene.numbers.filter((value) => scene.operator === "이상" ? value >= scene.bound : value <= scene.bound), [scene]);
-  const progress = ((sceneIndex + (phase === "success" || phase === "complete" ? 1 : 0)) / scenes.length) * 100;
+  const [section, setSection] = useState<Section>("practice");
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [input, setInput] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [wrongIds, setWrongIds] = useState<number[]>([]);
+  const [showHint, setShowHint] = useState(false);
+  const question = questions[questionIndex];
+  const normalizedAnswer = (value: string) => value.replace(/\s/g, "").split(",").sort().join(",");
+  const currentAnswer = question.type === "input" ? input : selected.join(",");
+  const isCorrect = submitted && normalizedAnswer(currentAnswer) === normalizedAnswer(question.answer);
+  const progress = Math.round((correctCount / questions.length) * 100);
+  const topicProgress = useMemo(() => theory.map((item, index) => ({ ...item, done: index === 0 ? correctCount >= 2 : index === 1 ? correctCount >= 4 : correctCount >= 6 })), [correctCount]);
 
-  const beginScene = () => { setPicked([]); setMistakeValue(null); setMessage(""); setPhase("play"); };
-  const pickFromStory = (value: number) => {
-    const correct = safeNumbers.includes(value);
-    setPicked(correct ? [value] : []);
-    setMistakeValue(correct ? null : value);
-    setLight(correct ? 1 : 0);
-    setMessage(correct ? "좋아, 이 별이 루미의 길을 밝혀 줘!" : `${value}은(는) 아직 경계 밖이야.`);
-    setPhase(correct ? "play" : "mistake");
+  const resetAnswer = () => { setSelected([]); setInput(""); setSubmitted(false); setShowHint(false); };
+  const submit = () => {
+    if (!currentAnswer) return;
+    const result = normalizedAnswer(currentAnswer) === normalizedAnswer(question.answer);
+    setSubmitted(true);
+    if (result) setCorrectCount((value) => Math.max(value, questionIndex + 1));
+    else setWrongIds((ids) => ids.includes(question.id) ? ids : [...ids, question.id]);
   };
-  const chooseNumber = (value: number) => {
-    if (phase !== "play") return;
-    const correct = safeNumbers.includes(value);
-    if (!correct) {
-      setMistakeValue(value); setLives((current) => Math.max(0, current - 1)); setPhase("mistake"); setMessage(`${value}은(는) ${scene.bound} ${scene.operator === "이상" ? "보다 작아" : "보다 커"}.`); return;
-    }
-    if (!picked.includes(value)) {
-      const next = [...picked, value]; setPicked(next); setLight((current) => Math.min(6, current + 1));
-      if (safeNumbers.every((item) => next.includes(item))) { setMessage(scene.safeMessage); setPhase("success"); } else setMessage("좋아! 길이 한 칸 더 빛났어.");
-    }
-  };
-  const nextScene = () => { if (sceneIndex === scenes.length - 1) setPhase("complete"); else { setSceneIndex((current) => current + 1); setPhase("story"); } };
-  const restart = () => { setSceneIndex(0); setPhase("story"); setPicked([]); setLives(3); setLight(0); setMistakeValue(null); setMessage(""); };
+  const next = () => { setQuestionIndex((value) => (value + 1) % questions.length); resetAnswer(); };
+  const chooseOption = (option: string) => { if (submitted) return; setSelected((current) => current.includes(option) ? current.filter((item) => item !== option) : [...current, option]); };
 
   return (
-    <main className="lumi-app">
-      <header className="lumi-header"><div className="lumi-brand"><div className="lumi-logo"><LumiMark small /></div><div><p>STARLIGHT RESCUE</p><strong>루미의 귀가</strong></div></div><div className="chapter-count">밤 {sceneIndex + 1} <span>/</span> 3</div><div className="header-tools"><div className="home-light"><HomeIcon size={15} /><span>집의 빛</span><div>{[0, 1, 2, 3, 4, 5].map((item) => <i key={item} className={item < light ? "on" : ""} />)}</div></div><div className="heart-row">{[0, 1, 2].map((item) => <Heart key={item} size={18} fill={item < lives ? "#ff8f83" : "transparent"} color={item < lives ? "#ff8f83" : "#c5bfd0"} />)}</div></div></header>
+    <main className="study-app">
+      <header className="study-header"><div className="study-brand"><div className="study-logo"><BookOpen size={20} /></div><div><p>ICECREAM MATH · 5-2</p><strong>수학 공부방</strong></div></div><div className="study-header__center"><span>1단원</span><ChevronRight size={14} /><strong>수의 범위와 어림하기</strong></div><div className="study-profile"><span>오늘의 학습</span><b>{correctCount} / {questions.length}</b><div className="profile-avatar">J</div></div></header>
 
-      <div className="lumi-progress"><div style={{ width: `${progress}%` }} /></div>
+      <div className="study-layout"><aside className="study-sidebar"><div className="sidebar-label">UNIT 01 · 학습 목차</div><h1>수의 범위와<br /><em>어림하기</em></h1><p className="sidebar-desc">개념을 읽고, 문제를 풀며<br />나의 수학 실력을 확인해요.</p><nav className="study-nav"><button type="button" className={section === "overview" ? "nav-item nav-item--active" : "nav-item"} onClick={() => setSection("overview")}><span className="nav-icon"><BookOpen size={16} /></span><span><b>단원 한눈에 보기</b><small>핵심 개념 3개</small></span><ChevronRight size={15} /></button><button type="button" className={section === "range" ? "nav-item nav-item--active" : "nav-item"} onClick={() => setSection("range")}><span className="nav-icon nav-icon--mint"><Target size={16} /></span><span><b>수의 범위</b><small>이상·이하·초과·미만</small></span><span className={topicProgress[0].done ? "nav-check nav-check--done" : "nav-check"}>{topicProgress[0].done ? <Check size={13} /> : "1"}</span></button><button type="button" className={section === "rounding" ? "nav-item nav-item--active" : "nav-item"} onClick={() => setSection("rounding")}><span className="nav-icon nav-icon--orange"><TrendingUp size={16} /></span><span><b>어림하기</b><small>올림·버림·반올림</small></span><span className={topicProgress[2].done ? "nav-check nav-check--done" : "nav-check"}>{topicProgress[2].done ? <Check size={13} /> : "2"}</span></button><button type="button" className={section === "practice" ? "nav-item nav-item--active" : "nav-item"} onClick={() => setSection("practice")}><span className="nav-icon nav-icon--purple"><ListChecks size={16} /></span><span><b>연습 문제</b><small>총 8문제 · 현재 {questionIndex + 1}번</small></span><span className="nav-check">{correctCount}</span></button></nav><div className="sidebar-progress"><div className="progress-heading"><span>단원 진행률</span><strong>{progress}%</strong></div><div className="progress-track"><i style={{ width: `${progress}%` }} /></div><p>{progress >= 75 ? "거의 다 왔어요." : "하나씩 정확하게 풀어 봐요."}</p></div><div className="sidebar-note"><Lightbulb size={17} /><p><strong>공부 팁</strong><br />헷갈린 문제는 해설을 읽고 비슷한 문제를 다시 풀어 보세요.</p></div></aside>
 
-      {phase === "complete" ? <section className="complete-screen"><div className="complete-art"><StoryArt sky="home" glow={6} /><div className="complete-lumi"><LumiMark /></div></div><div className="complete-copy"><p className="overline">STARLIGHT RESTORED</p><h1>루미가<br /><em>집에 도착했어.</em></h1><p>네가 고른 별 조각으로 밤하늘이 다시 빛났어. 루미는 오늘의 길을 오래 기억할 거야.</p><div className="final-reward"><Sparkles size={21} /><div><strong>별빛 구조대 배지 획득</strong><span>기준값을 포함한 범위를 찾았어요.</span></div></div><button type="button" className="lumi-button" onClick={restart}>다시 별빛 모으기 <RotateCcw size={16} /></button></div></section> : <section className="lumi-stage"><div className="stage-scene"><StoryArt sky={scene.sky} glow={light} /><div className="scene-vignette" /><div className="scene-caption"><span className="chapter-tag">밤 {sceneIndex + 1} · {scene.title}</span><h1>{phase === "story" ? "루미의 집에" : "빛나는 길을"}<br /><em>{phase === "story" ? "돌아가는 길" : "만들어 주세요"}</em></h1></div><div className="lumi-speech"><LumiMark small /><span>{phase === "story" ? "별 조각을 찾아서 집에 가고 싶어…" : phase === "mistake" ? "앗, 바람이 불었어. 다른 조각을 골라 보자!" : phase === "success" ? "내 길이 빛나고 있어!" : "어떤 조각이 내 길일까?"}</span></div><div className="scene-shard-preview"><p>루미의 길을 밝혀 줄 별</p><div>{scene.numbers.map((value) => <button type="button" key={value} onClick={() => pickFromStory(value)} className={picked.includes(value) ? "story-shard story-shard--picked" : mistakeValue === value ? "story-shard story-shard--mistake" : "story-shard"}><Star size={17} fill="currentColor" /><strong>{value}</strong></button>)}</div></div><div className="scene-home-label"><HomeIcon size={14} /> LUMI'S HOME</div></div>
-
-          <div className="play-panel">{phase === "story" && <div className="story-card"><p className="overline">루미에게 온 별빛 편지</p><h2>{scene.story}</h2><p className="story-magic-line">{scene.bound}보다 {scene.operator === "이상" ? "크거나 같은" : "작거나 같은"} 별만 루미의 길을 밝혀 줘.</p><div className="rule-preview"><div className="rule-icon"><Star size={18} fill="currentColor" /></div><div><span>오늘 밤의 별빛 규칙</span><strong>{scene.bound} {scene.operator}</strong><small>{scene.operator === "이상" ? "같거나 큰 조각을 찾아요" : "같거나 작은 조각을 찾아요"}</small></div></div><button type="button" className="lumi-button lumi-button--wide" onClick={beginScene}>길을 찾아 출발하기 <ArrowRight size={18} /></button><p className="tiny-note">위 장면의 별을 바로 눌러도 좋아요.</p></div>}
-          {(phase === "play" || phase === "mistake" || phase === "success") && <div className="choice-card"><div className="choice-card__top"><div><p className="overline">CHOOSE THE STAR SHARDS</p><h2><strong>{scene.bound} {scene.operator}</strong>인 조각을 골라 줘.</h2></div><div className="choice-rule"><span>기준값</span><b>{scene.bound}</b><i>{scene.operator === "이상" ? "포함" : "포함"}</i></div></div><div className="path-preview"><div className="path-line"><i className="path-light" style={{ width: `${Math.min(93, 23 + picked.length * 24)}%` }} /></div><div className="path-lumi"><LumiMark small /></div><div className="path-home"><HomeIcon size={18} /></div></div><p className="choose-help">{message || "정답 별 조각을 모두 모으면 길이 완성돼요."}</p><div className="shard-grid">{scene.numbers.map((value) => { const isPicked = picked.includes(value); const isMistake = mistakeValue === value; return <button type="button" key={value} className={`shard-button ${isPicked ? "shard-button--picked" : ""} ${isMistake ? "shard-button--mistake" : ""}`} onClick={() => chooseNumber(value)}><span className="shard-crystal"><Star size={20} fill="currentColor" /></span><strong>{value}</strong>{isPicked && <Check size={15} />}{isMistake && <X size={15} />}</button>; })}</div>{phase === "mistake" && <div className="mistake-note"><Wind size={16} /><span><strong>{mistakeValue}</strong>은(는) 경계 밖이에요. {scene.bound} {scene.operator === "이상" ? "이상" : "이하"}를 다시 생각해 보자.</span><button type="button" onClick={() => { setMistakeValue(null); setPhase("play"); }}>다시 고르기</button></div>}{phase === "success" && <div className="success-note"><Sparkles size={17} /><span>{scene.safeMessage} 이제 다음 밤으로 갈 수 있어.</span><button type="button" onClick={nextScene}>{sceneIndex === scenes.length - 1 ? "집 불 켜기" : "다음 장면"} <ArrowRight size={15} /></button></div>}</div>}
-          <div className="learning-foot"><span><Lock size={13} /> 수학 미션 {sceneIndex + 1}</span><span>정답 별빛 {picked.length} / {safeNumbers.length}</span></div></div></section>}
+        <section className="study-main">{section === "practice" ? <><div className="content-heading"><div><p className="content-kicker">PRACTICE · 문제 풀이</p><h2>개념을 확인해 볼까요?</h2><p>문제를 읽고 알맞은 답을 선택하세요. 틀려도 괜찮아요.</p></div><div className="question-counter"><span>QUESTION</span><strong>{String(questionIndex + 1).padStart(2, "0")}</strong><small>/ {String(questions.length).padStart(2, "0")}</small></div></div><div className="question-card"><div className="question-card__meta"><span className="tag tag--blue">{question.tag}</span><span className="difficulty"><i /> 기본 확인</span></div><h3>{question.prompt}</h3>{question.type === "choice" ? <div className="option-grid">{question.options?.map((option) => <button type="button" key={option} disabled={submitted} className={`option-button ${selected.includes(option) ? "option-button--selected" : ""} ${submitted && question.answer.split(",").includes(option.replace(/,/g, "")) ? "option-button--answer" : ""}`} onClick={() => chooseOption(option)}><span className="option-letter">{String.fromCharCode(65 + (question.options?.indexOf(option) ?? 0))}</span><strong>{option}</strong>{selected.includes(option) && <Check size={17} />}</button>)}</div> : <div className="answer-input-wrap"><label>답을 숫자로 입력하세요<input value={input} disabled={submitted} onChange={(event) => setInput(event.target.value.replace(/[^0-9,]/g, ""))} onKeyDown={(event) => { if (event.key === "Enter") submit(); }} placeholder="예: 500" inputMode="numeric" /></label><span>쉼표가 있는 수는 쉼표 없이 입력해도 돼요.</span></div>}<div className="question-actions"><button type="button" className="hint-button" onClick={() => setShowHint((value) => !value)}><Lightbulb size={16} /> 힌트 보기</button>{!submitted ? <button type="button" className="submit-button" onClick={submit} disabled={!currentAnswer}>정답 확인 <Send size={16} /></button> : <button type="button" className="next-button" onClick={next}>다음 문제 <ChevronRight size={17} /></button>}</div>{showHint && <div className="hint-box"><Lightbulb size={16} /><span><strong>힌트</strong>{question.hint}</span></div>}{submitted && <div className={isCorrect ? "feedback feedback--correct" : "feedback feedback--wrong"}><div className="feedback-icon">{isCorrect ? <Check size={20} /> : <CircleAlert size={20} />}</div><div><strong>{isCorrect ? "정답이에요!" : "다시 생각해 볼까요?"}</strong><p>{isCorrect ? question.explanation : `정답은 ${question.answer.split(",").join(", ")}이에요. ${question.explanation}`}</p></div>{!isCorrect && <button type="button" onClick={resetAnswer}><RotateCcw size={15} /> 다시 풀기</button>}</div>}</div><div className="practice-footer"><span><ListChecks size={14} /> 한 문제씩 차근차근</span><span>{wrongIds.length > 0 ? `오답 기록 ${wrongIds.length}개` : "아직 오답이 없어요"}</span></div></> : <TheoryView section={section} onPractice={() => setSection("practice")} />}</section>
+      </div>
     </main>
   );
+}
+
+function TheoryView({ section, onPractice }: { section: Section; onPractice: () => void }) {
+  const items = section === "overview" ? theory : section === "range" ? theory.slice(0, 2) : theory.slice(2);
+  return <div className="theory-view"><div className="content-heading"><div><p className="content-kicker">THEORY · 개념 정리</p><h2>{section === "overview" ? "이번 단원에서 배워요" : section === "range" ? "수의 범위" : "어림하기"}</h2><p>문제를 풀기 전에 핵심 개념을 간단히 확인해 보세요.</p></div><button type="button" className="practice-link" onClick={onPractice}>연습 문제 풀기 <ChevronRight size={16} /></button></div><div className="theory-stack">{items.map((item) => <article className={`theory-card theory-card--${item.tone}`} key={item.id}><div className="theory-card__header"><div className="theory-number">{item.id === "range" ? "01" : item.id === "line" ? "02" : "03"}</div><div><h3>{item.title}</h3><p>{item.summary}</p></div></div><div className="theory-card__body"><p>{item.body}</p>{item.id === "line" && <div className="line-examples"><div><NumberLine type="included" /><strong>● 기준값 포함</strong><span>이상 · 이하</span></div><div><NumberLine type="excluded" /><strong>○ 기준값 제외</strong><span>초과 · 미만</span></div></div>}{item.id !== "line" && <div className="example-list">{item.examples.map((example) => <div key={example}><Check size={15} /> <span>{example}</span></div>)}</div>}</div></article>)}</div><div className="theory-callout"><CircleAlert size={18} /><div><strong>자주 하는 실수</strong><p>‘이상·이하’는 기준값을 포함하지만, ‘초과·미만’은 기준값을 포함하지 않아요.</p></div></div></div>;
 }

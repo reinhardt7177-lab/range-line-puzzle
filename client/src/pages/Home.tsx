@@ -1,276 +1,217 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertTriangle,
   ArrowRight,
   Check,
-  ChevronRight,
-  CircleHelp,
   Crosshair,
-  Flag,
+  Flame,
   Gamepad2,
+  Heart,
   Lightbulb,
-  LockKeyhole,
+  Pause,
+  Play,
   RotateCcw,
+  Shield,
   Sparkles,
   Target,
+  Trophy,
   Zap,
 } from "lucide-react";
 
-// Design reminder: 숫자 아케이드 관제실 — gameplay is the math action.
-// Use cobalt boundary nodes, tangerine action states, mint success states,
-// asymmetric mission rail, short arcade rounds, and paper-like surfaces.
+// Design reminder: 숫자 아케이드 관제실 — this is a game first, with math as
+// the combat rule. Cobalt arena, tangerine threats, mint correct hits,
+// moving enemies, short rounds, and tactile controls.
 
 type Operator = "이상" | "이하";
+type Phase = "playing" | "paused" | "cleared" | "gameover";
 
 type Round = {
-  id: number;
-  operator: Operator;
   bound: number;
+  operator: Operator;
   numbers: number[];
-  label: string;
-  scene: string;
+  title: string;
+  color: string;
+};
+
+type Enemy = {
+  id: number;
+  value: number;
+  left: number;
+  y: number;
+  speed: number;
 };
 
 const rounds: Round[] = [
-  {
-    id: 1,
-    operator: "이상",
-    bound: 120,
-    numbers: [112, 120, 127, 138],
-    label: "입장 조건",
-    scene: "첫 번째 게이트",
-  },
-  {
-    id: 2,
-    operator: "이하",
-    bound: 85,
-    numbers: [72, 84, 85, 93],
-    label: "안전 구역",
-    scene: "두 번째 게이트",
-  },
-  {
-    id: 3,
-    operator: "이상",
-    bound: 300,
-    numbers: [264, 299, 300, 318],
-    label: "파워 충전",
-    scene: "세 번째 게이트",
-  },
-  {
-    id: 4,
-    operator: "이하",
-    bound: 45,
-    numbers: [39, 45, 47, 52],
-    label: "착륙 허가",
-    scene: "최종 게이트",
-  },
+  { bound: 120, operator: "이상", numbers: [112, 120, 127, 138], title: "GATE 01 / 기준값 이상", color: "mint" },
+  { bound: 85, operator: "이하", numbers: [72, 84, 85, 93], title: "GATE 02 / 기준값 이하", color: "orange" },
+  { bound: 300, operator: "이상", numbers: [264, 299, 300, 318], title: "GATE 03 / 기준값 이상", color: "mint" },
+  { bound: 45, operator: "이하", numbers: [39, 45, 47, 52], title: "GATE 04 / 기준값 이하", color: "orange" },
 ];
 
-function RangeMark({ compact = false }: { compact?: boolean }) {
+function RangeMark() {
+  return <span className="range-mark" aria-hidden="true"><i /><b /><i /></span>;
+}
+
+function ArenaArt() {
   return (
-    <span className={compact ? "range-mark range-mark--compact" : "range-mark"} aria-hidden="true">
-      <span className="range-mark__node range-mark__node--left" />
-      <span className="range-mark__line" />
-      <span className="range-mark__node range-mark__node--right" />
-    </span>
+    <svg className="arena-art" viewBox="0 0 720 390" aria-hidden="true" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stopColor="#162e69" /><stop offset="1" stopColor="#081331" /></linearGradient>
+        <linearGradient id="beam" x1="0" x2="1"><stop offset="0" stopColor="#53d6b0" stopOpacity="0" /><stop offset="0.5" stopColor="#53d6b0" stopOpacity="0.85" /><stop offset="1" stopColor="#53d6b0" stopOpacity="0" /></linearGradient>
+        <filter id="glow"><feGaussianBlur stdDeviation="6" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+      </defs>
+      <rect width="720" height="390" fill="url(#sky)" />
+      <path d="M0 292 L112 246 L201 284 L314 224 L422 267 L536 206 L720 261 V390 H0Z" fill="#0b1b43" opacity=".9" />
+      <path d="M0 331 L125 290 L218 320 L360 271 L470 316 L591 256 L720 295 V390 H0Z" fill="#07132f" />
+      <path d="M75 114 H640" stroke="url(#beam)" strokeWidth="2" filter="url(#glow)" opacity=".55" />
+      <path d="M22 93 L121 93 M586 93 L698 93" stroke="#5578d8" strokeWidth="1" opacity=".6" />
+      <path d="M22 100 L71 100 M639 100 L698 100" stroke="#ff9e4a" strokeWidth="2" opacity=".75" />
+      <g fill="#9cb4fb" opacity=".8"><circle cx="94" cy="53" r="1.5" /><circle cx="157" cy="142" r="1.5" /><circle cx="244" cy="82" r="1" /><circle cx="353" cy="42" r="1.5" /><circle cx="468" cy="117" r="1" /><circle cx="602" cy="55" r="1.5" /><circle cx="662" cy="151" r="1" /></g>
+      <g fill="#ff9e4a" opacity=".85"><path d="M32 174h3v3h-3z" /><path d="M681 181h3v3h-3z" /><path d="M508 67h3v3h-3z" /></g>
+      <g transform="translate(290 306)" filter="url(#glow)"><path d="M70 0 L108 72 L70 59 L32 72Z" fill="#3156d8" stroke="#9db6ff" strokeWidth="2" /><path d="M70 8 L80 42 L70 37 L60 42Z" fill="#ff9e4a" /><path d="M35 58 L10 86 L52 70Z" fill="#1b3988" stroke="#718fe8" strokeWidth="2" /><path d="M105 58 L130 86 L88 70Z" fill="#1b3988" stroke="#718fe8" strokeWidth="2" /></g>
+      <path d="M0 351 Q180 329 360 351 T720 351" fill="none" stroke="#3156d8" strokeWidth="2" opacity=".55" />
+    </svg>
   );
 }
 
-function NumberChip({
-  value,
-  selected,
-  correct,
-  onClick,
-}: {
-  value: number;
-  selected: boolean;
-  correct?: boolean;
-  onClick: () => void;
-}) {
+function EnemyBot({ enemy, onFire, hitFlash }: { enemy: Enemy; onFire: () => void; hitFlash: boolean }) {
   return (
-    <button
-      type="button"
-      className={`number-chip ${selected ? "number-chip--selected" : ""} ${correct === true ? "number-chip--correct" : ""}`}
-      onClick={onClick}
-      aria-pressed={selected}
-    >
-      <span className="number-chip__dot" />
-      <strong>{value}</strong>
-      {selected && <Check size={16} strokeWidth={3} />}
+    <button type="button" className={`enemy-bot ${hitFlash ? "enemy-bot--flash" : ""}`} style={{ left: `${enemy.left}%`, top: `${enemy.y}%` }} onClick={onFire} aria-label={`${enemy.value} 숫자 적 공격`}>
+      <span className="enemy-bot__antenna" />
+      <span className="enemy-bot__body"><i /><strong>{enemy.value}</strong><i /></span>
+      <span className="enemy-bot__shadow" />
     </button>
   );
 }
 
 export default function Home() {
   const [roundIndex, setRoundIndex] = useState(0);
-  const [boundary, setBoundary] = useState(120);
-  const [selected, setSelected] = useState<number[]>([]);
-  const [feedback, setFeedback] = useState<"idle" | "boundary" | "chips" | "success">("idle");
-  const [hintOpen, setHintOpen] = useState(false);
+  const [boundary, setBoundary] = useState(rounds[0].bound);
+  const [phase, setPhase] = useState<Phase>("playing");
+  const [timeLeft, setTimeLeft] = useState(45);
+  const [lives, setLives] = useState(3);
+  const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [stars, setStars] = useState(0);
-  const [lockedRounds, setLockedRounds] = useState(0);
-
+  const [wave, setWave] = useState(1);
+  const [enemies, setEnemies] = useState<Enemy[]>([
+    { id: 1, value: 112, left: 17, y: 14, speed: 0.32 },
+    { id: 2, value: 120, left: 43, y: 31, speed: 0.27 },
+    { id: 3, value: 138, left: 76, y: 7, speed: 0.23 },
+  ]);
+  const [message, setMessage] = useState("적 숫자를 클릭해서 안전 구역으로 돌려보내!");
+  const [hitFlash, setHitFlash] = useState<number | null>(null);
+  const [hintOpen, setHintOpen] = useState(false);
+  const enemyId = useRef(4);
+  const spawnCount = useRef(0);
   const round = rounds[roundIndex];
-  const isLastRound = roundIndex === rounds.length - 1;
-  const correctValues = useMemo(
-    () => round.numbers.filter((value) => (round.operator === "이상" ? value >= round.bound : value <= round.bound)),
-    [round],
-  );
+  const isCorrectBoundary = boundary === round.bound;
+  const correctValues = useMemo(() => round.numbers.filter((value) => round.operator === "이상" ? value >= round.bound : value <= round.bound), [round]);
+  const timerPercent = (timeLeft / 45) * 100;
   const boundaryPercent = Math.min(92, Math.max(8, ((boundary - 40) / 280) * 100));
-  const progressPercent = ((roundIndex + (feedback === "success" ? 1 : 0)) / rounds.length) * 100;
 
-  const resetRound = () => {
-    setBoundary(round.bound);
-    setSelected([]);
-    setFeedback("idle");
-    setHintOpen(false);
+  useEffect(() => {
+    if (phase !== "playing") return;
+    const movement = window.setInterval(() => {
+      setEnemies((current) => {
+        const next = current.map((enemy) => ({ ...enemy, y: enemy.y + enemy.speed + wave * 0.015 }));
+        const reached = next.filter((enemy) => enemy.y >= 82);
+        if (reached.length) {
+          setLives((value) => Math.max(0, value - reached.length));
+          setCombo(0);
+          setMessage(`${reached.length}개의 숫자가 방어선을 통과했어. 다시 범위를 확인해!`);
+        }
+        return next.filter((enemy) => enemy.y < 82);
+      });
+    }, 360);
+    const spawner = window.setInterval(() => {
+      const value = round.numbers[spawnCount.current % round.numbers.length];
+      spawnCount.current += 1;
+      setEnemies((current) => current.length > 5 ? current : [...current, { id: enemyId.current++, value, left: 8 + ((spawnCount.current * 29) % 82), y: -8, speed: 0.2 + (spawnCount.current % 3) * 0.05 }]);
+    }, 1350);
+    return () => { window.clearInterval(movement); window.clearInterval(spawner); };
+  }, [phase, round, wave]);
+
+  useEffect(() => {
+    if (phase !== "playing") return;
+    const timer = window.setInterval(() => setTimeLeft((value) => {
+      if (value <= 1) { setPhase("cleared"); setMessage("시간 안에 방어선을 지켰어! 다음 게이트가 열려."); return 0; }
+      return value - 1;
+    }), 1000);
+    return () => window.clearInterval(timer);
+  }, [phase]);
+
+  useEffect(() => {
+    if (lives <= 0 && phase === "playing") { setPhase("gameover"); setMessage("방어선이 무너졌어. 범위를 다시 잠그고 재도전하자."); }
+  }, [lives, phase]);
+
+  const resetMission = () => {
+    setBoundary(round.bound); setPhase("playing"); setTimeLeft(45); setLives(3); setScore(0); setCombo(0); setWave(1); setHintOpen(false); setMessage("적 숫자를 클릭해서 안전 구역으로 돌려보내!");
+    setEnemies([{ id: enemyId.current++, value: round.numbers[0], left: 17, y: 14, speed: 0.32 }, { id: enemyId.current++, value: round.numbers[1], left: 43, y: 31, speed: 0.27 }, { id: enemyId.current++, value: round.numbers[2], left: 76, y: 7, speed: 0.23 }]);
   };
 
-  const chooseChip = (value: number) => {
-    if (feedback === "success") return;
-    setSelected((current) => (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]));
-    setFeedback("idle");
+  const nextGate = () => {
+    const nextIndex = (roundIndex + 1) % rounds.length;
+    setRoundIndex(nextIndex); setBoundary(rounds[nextIndex].bound); setPhase("playing"); setTimeLeft(45); setLives(3); setCombo(0); setWave((value) => Math.min(3, value + 1)); setMessage("새 게이트의 기준값을 잠가!");
+    setEnemies([{ id: enemyId.current++, value: rounds[nextIndex].numbers[0], left: 20, y: 14, speed: 0.32 }, { id: enemyId.current++, value: rounds[nextIndex].numbers[2], left: 64, y: 28, speed: 0.25 }]);
   };
 
-  const submit = () => {
-    if (boundary !== round.bound) {
-      setFeedback("boundary");
-      setHintOpen(true);
-      return;
+  const fireAtEnemy = (enemy: Enemy) => {
+    if (phase !== "playing") return;
+    if (!isCorrectBoundary) {
+      setLives((value) => Math.max(0, value - 1)); setCombo(0); setMessage(`먼저 경계를 ${round.bound}에 잠가야 해. 지금은 ${boundary}야.`); setHitFlash(enemy.id); window.setTimeout(() => setHitFlash(null), 240); return;
     }
-    const sortedSelected = [...selected].sort((a, b) => a - b);
-    const sortedCorrect = [...correctValues].sort((a, b) => a - b);
-    const isCorrect = JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect);
-    if (!isCorrect) {
-      setFeedback("chips");
-      return;
-    }
-    setFeedback("success");
-    setCombo((value) => value + 1);
-    setStars((value) => value + (hintOpen ? 1 : 2));
-    setLockedRounds((value) => Math.max(value, roundIndex + 1));
-  };
-
-  const nextRound = () => {
-    if (isLastRound) {
-      setRoundIndex(0);
-      setCombo(0);
-      setStars(0);
-      setLockedRounds(0);
+    const isValid = correctValues.includes(enemy.value);
+    if (isValid) {
+      setEnemies((current) => current.filter((item) => item.id !== enemy.id)); setCombo((value) => value + 1); setScore((value) => value + 100 + combo * 25); setHitFlash(enemy.id); setMessage(`${enemy.value} 격추 성공! ${round.bound}${round.operator === "이상" ? " 이상" : " 이하"} 구역에 들어왔어.`); window.setTimeout(() => setHitFlash(null), 240);
+      if ((combo + 1) % 5 === 0) { setWave((value) => Math.min(3, value + 1)); setMessage("콤보 보너스! 적 웨이브가 빨라졌어."); }
     } else {
-      setRoundIndex((value) => value + 1);
+      setLives((value) => Math.max(0, value - 1)); setCombo(0); setMessage(`${enemy.value}는 안전 구역 숫자가 아니야. 경계값을 다시 확인해!`); setHitFlash(enemy.id); window.setTimeout(() => setHitFlash(null), 240);
     }
-    setBoundary(rounds[isLastRound ? 0 : roundIndex + 1].bound);
-    setSelected([]);
-    setFeedback("idle");
-    setHintOpen(false);
   };
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
-        <div className="brand-lockup">
-          <div className="brand-symbol"><RangeMark compact /></div>
-          <div>
-            <p className="brand-kicker">MATH ARCADE / 01</p>
-            <p className="brand-name">RANGE<span>//</span>LINE</p>
-          </div>
-        </div>
-        <div className="topbar__right">
-          <div className="streak-pill"><Zap size={15} fill="currentColor" /> <span>{combo} COMBO</span></div>
-          <div className="star-meter"><Sparkles size={16} /> <strong>{stars.toString().padStart(2, "0")}</strong><span>STARS</span></div>
-          <button type="button" className="avatar-button" aria-label="학생 프로필">J</button>
-        </div>
+    <main className="arcade-app">
+      <header className="arcade-topbar">
+        <div className="brand-lockup"><div className="brand-symbol"><RangeMark /></div><div><p className="brand-kicker">RANGE//LINE ARCADE</p><p className="brand-name">BOUNDARY<span>BREAK</span></p></div></div>
+        <div className="topbar-center"><span className="mini-status"><i /> SERVER ONLINE</span><span className="topbar-stage">UNIT 01 / LESSON 02</span></div>
+        <div className="topbar-stats"><div><span>SCORE</span><strong>{score.toString().padStart(5, "0")}</strong></div><div className="combo-readout"><Flame size={15} /><span>{combo}x</span></div><button type="button" className="profile-chip">J</button></div>
       </header>
 
-      <div className="workspace">
-        <aside className="mission-rail">
-          <div className="rail-topline"><span>MISSION LOG</span><span className="live-dot">LIVE</span></div>
-          <div className="mission-intro">
-            <p className="eyebrow">UNIT 01 / LESSON 02</p>
-            <h1>경계선<br /><em>퍼즐</em></h1>
-            <p>기준값을 포함하는 안전 구간을 만들고 숫자 칩을 통과시키세요.</p>
-          </div>
-
-          <div className="mission-card">
-            <div className="mission-card__stamp"><Target size={18} /></div>
-            <div>
-              <p className="card-label">CURRENT OBJECTIVE</p>
-              <p className="mission-card__title">{round.label}</p>
-              <p className="mission-card__copy">{round.operator === "이상" ? "기준값과 같거나 큰 수" : "기준값과 같거나 작은 수"}만 통과</p>
-            </div>
-          </div>
-
-          <div className="lesson-list">
-            <div className="lesson-list__heading"><span>LESSON MAP</span><span>02 / 11</span></div>
-            <div className="lesson-row lesson-row--done"><span className="lesson-index">01</span><span>숫자 마을 탐험</span><Check size={14} /></div>
-            <div className="lesson-row lesson-row--active"><span className="lesson-index">02</span><span>이상과 이하</span><span className="lesson-live">NOW</span></div>
-            <div className="lesson-row"><span className="lesson-index">03</span><span>초과와 미만</span><LockKeyhole size={14} /></div>
-            <div className="lesson-row"><span className="lesson-index">04</span><span>범위 판정 센터</span><LockKeyhole size={14} /></div>
-          </div>
-
-          <div className="rail-tip"><Lightbulb size={17} /><p><strong>플레이 팁</strong><br />이상과 이하는 기준값을 포함해요. 경계 노드를 먼저 맞춰 보세요.</p></div>
+      <div className="arcade-layout">
+        <aside className="control-rail">
+          <div className="rail-label"><span>MISSION</span><span>02 / 11</span></div>
+          <div className="mission-title"><span className="mission-index">LEVEL 02</span><h1>경계선<br /><em>브레이크</em></h1><p>범위 안 숫자만 골라서 방어선을 지켜.</p></div>
+          <div className="rule-card"><div className="rule-card__top"><Shield size={18} /><span>RULE CORE</span></div><strong>{round.bound} {round.operator}</strong><p>{round.operator === "이상" ? "같거나 큰 숫자" : "같거나 작은 숫자"}가 안전 구역이야.</p></div>
+          <div className="health-block"><div className="health-label"><span>SHIELD</span><span>{lives} / 3</span></div><div className="hearts">{[0, 1, 2].map((index) => <Heart key={index} size={20} fill={index < lives ? "#ff6e72" : "transparent"} color={index < lives ? "#ff6e72" : "#5d6f9f"} />)}</div></div>
+          <div className="progress-block"><div className="health-label"><span>GATE PROGRESS</span><span>GATE {roundIndex + 1} / 04</span></div><div className="gate-progress"><i style={{ width: `${((roundIndex + (phase === "cleared" ? 1 : 0)) / rounds.length) * 100}%` }} /></div></div>
+          <div className="tip-card"><Lightbulb size={16} /><p><strong>작전 힌트</strong><br />경계값을 먼저 맞춘 뒤, 안전한 숫자 적만 클릭해.</p></div>
         </aside>
 
-        <section className="game-stage">
-          <div className="stage-heading">
-            <div>
-              <div className="breadcrumb"><span>UNIT 01</span><ChevronRight size={13} /><span>LESSON 02</span><ChevronRight size={13} /><strong>{round.scene}</strong></div>
-              <h2>{round.operator === "이상" ? "기준값 이상인 칩을" : "기준값 이하인 칩을"} 통과시켜.</h2>
-            </div>
-            <div className="round-status"><span>ROUND</span><strong>{String(round.id).padStart(2, "0")}</strong><span>/ 04</span></div>
+        <section className="play-zone">
+          <div className="play-header"><div><p className="eyebrow">LIVE DEFENSE / {round.title}</p><h2>{message}</h2></div><div className="play-actions"><button type="button" className="icon-action" onClick={() => setPhase((value) => value === "playing" ? "paused" : "playing")} aria-label="일시정지">{phase === "playing" ? <Pause size={17} /> : <Play size={17} />}</button><button type="button" className="icon-action" onClick={resetMission} aria-label="재시작"><RotateCcw size={17} /></button></div></div>
+
+          <div className="battle-arena">
+            <ArenaArt />
+            <div className="arena-label arena-label--left"><Crosshair size={15} /> CLICK TO BLAST / SAFE NUMBERS ONLY</div><div className="arena-label arena-label--right">WAVE 0{wave} <span className="wave-dot" /></div>
+            <div className="timer-box"><span>TIME</span><strong>{String(timeLeft).padStart(2, "0")}</strong><i style={{ width: `${timerPercent}%` }} /></div>
+            <div className="danger-meter"><span>DANGER</span><div>{[0, 1, 2, 3, 4].map((index) => <i key={index} className={index < Math.min(5, Math.ceil(enemies.length / 2)) ? "danger-on" : ""} />)}</div></div>
+            <div className="enemy-layer">{enemies.map((enemy) => <EnemyBot key={enemy.id} enemy={enemy} hitFlash={hitFlash === enemy.id} onFire={() => fireAtEnemy(enemy)} />)}</div>
+            <div className="shield-line"><span>SHIELD LINE</span><i /></div>
+            <div className="pilot-ship"><div className="pilot-ship__core" /><div className="pilot-ship__wing pilot-ship__wing--left" /><div className="pilot-ship__wing pilot-ship__wing--right" /><span>YOU</span></div>
+            {phase !== "playing" && <div className="phase-overlay"><div className="overlay-badge">{phase === "cleared" ? <Trophy size={22} /> : phase === "gameover" ? <AlertTriangle size={22} /> : <Pause size={22} />}</div><p className="overlay-kicker">{phase === "cleared" ? "GATE CLEARED" : phase === "gameover" ? "SHIELD DOWN" : "PAUSED"}</p><h3>{phase === "cleared" ? "좋아, 다음 게이트로." : phase === "gameover" ? "한 번 더 잠가 보자." : "잠깐 멈춤"}</h3><p>{phase === "cleared" ? "범위 판단이 정확했어. 더 빠른 웨이브가 기다려." : phase === "gameover" ? "경계값을 정확히 놓고 안전 숫자만 골라야 해." : "작전을 정리하고 다시 시작할 준비가 되면 눌러."}</p><button type="button" className="overlay-action" onClick={phase === "cleared" ? nextGate : resetMission}>{phase === "cleared" ? "NEXT GATE" : phase === "gameover" ? "RETRY RUN" : "RESUME"} <ArrowRight size={16} /></button></div>}
           </div>
 
-          <div className="game-board">
-            <div className="board-grid" />
-            <div className="board-hud board-hud--left"><span className="hud-icon"><Crosshair size={16} /></span><span>RANGE LOCK</span></div>
-            <div className="board-hud board-hud--right"><span>NODE {String(round.id).padStart(2, "0")}</span><span className="hud-live-dot" /></div>
-
-            <div className="board-center">
-              <div className="range-visual-label"><span>SAFE ZONE</span><b>{round.operator === "이상" ? `${round.bound} 이상` : `${round.bound} 이하`}</b></div>
-              <div className="number-line-wrap">
-                <div className="number-line__scale"><span>40</span><span>80</span><span>120</span><span>160</span><span>200</span><span>240</span><span>280</span><span>320</span></div>
-                <div className="number-line" aria-label="수직선">
-                  <div className={`safe-zone safe-zone--${round.operator === "이상" ? "right" : "left"}`} style={round.operator === "이상" ? { left: `${boundaryPercent}%`, right: "0" } : { left: "0", right: `${100 - boundaryPercent}%` }} />
-                  <div className="line-track" />
-                  <div className="boundary-node" style={{ left: `${boundaryPercent}%` }}><span>{boundary}</span><i /></div>
-                  <div className="number-line__ticks">{Array.from({ length: 15 }).map((_, index) => <i key={index} />)}</div>
-                </div>
-                <div className="number-line__caption"><span>작은 수</span><strong>경계 노드</strong><span>큰 수</span></div>
-              </div>
-              <div className="slider-block">
-                <div className="slider-label"><span>경계 노드 위치</span><strong>{boundary}</strong></div>
-                <input type="range" min="40" max="320" step="1" value={boundary} onChange={(event) => { setBoundary(Number(event.target.value)); setFeedback("idle"); }} aria-label="경계 노드 위치" />
-                <div className="slider-scale"><span>40</span><span>320</span></div>
-              </div>
-            </div>
-            <div className="board-corner board-corner--tl">{round.operator === "이상" ? "BOUNDARY INCLUDED" : "BOUNDARY INCLUDED"}</div>
-            <div className="board-corner board-corner--br">INPUT / {selected.length} CHIPS</div>
+          <div className="command-deck">
+            <div className="command-copy"><p className="eyebrow">COMMAND DECK</p><h3>경계를 잠그면 공격이 가능해.</h3><p>{isCorrectBoundary ? "좋아. 이제 안전 구역 숫자를 클릭해서 격추해." : `슬라이더를 ${round.bound}에 맞추면 공격 시스템이 열려.`}</p></div>
+            <div className="boundary-control"><div className="boundary-control__label"><span>BOUNDARY NODE</span><strong>{boundary}</strong></div><div className="boundary-line"><div className={`boundary-safe boundary-safe--${round.operator === "이상" ? "right" : "left"}`} style={round.operator === "이상" ? { left: `${boundaryPercent}%`, right: 0 } : { left: 0, right: `${100 - boundaryPercent}%` }} /><div className="boundary-track" /><div className="boundary-handle" style={{ left: `${boundaryPercent}%` }}><span>{boundary}</span><i /></div></div><input type="range" min="40" max="320" value={boundary} onChange={(event) => { setBoundary(Number(event.target.value)); setMessage("경계를 맞추고, 안전 숫자만 클릭해!"); }} aria-label="경계 노드" /><div className="boundary-scale"><span>40</span><span>120</span><span>200</span><span>320</span></div></div>
+            <div className="command-rule"><div className={`operator-chip operator-chip--${round.operator === "이상" ? "mint" : "orange"}`}>{round.operator}</div><span>{round.bound} 포함</span></div>
           </div>
 
-          <div className="chip-deck">
-            <div className="deck-heading"><div><span className="eyebrow">CHIP FILTER</span><h3>통과시킬 숫자를 골라.</h3></div><span className="deck-count">{selected.length} / {round.numbers.length} SELECTED</span></div>
-            <div className="chip-row">{round.numbers.map((number) => <NumberChip key={number} value={number} selected={selected.includes(number)} correct={feedback === "success" ? correctValues.includes(number) : undefined} onClick={() => chooseChip(number)} />)}</div>
-          </div>
-
-          {feedback !== "idle" && (
-            <div className={`feedback-panel feedback-panel--${feedback}`} role="status">
-              <div className="feedback-icon">{feedback === "success" ? <Check size={22} /> : <CircleHelp size={22} />}</div>
-              <div><strong>{feedback === "success" ? "RANGE LOCKED — 통과 성공" : feedback === "boundary" ? "경계 노드를 다시 확인해 봐." : "칩의 범위를 다시 살펴봐."}</strong><p>{feedback === "success" ? "좋아. 기준값을 포함한 안전 구간을 정확히 만들었어." : feedback === "boundary" ? `지금은 ${boundary}에 놓여 있어. 미션의 기준값은 ${round.bound}야.` : `${round.operator === "이상" ? "기준값과 같거나 큰" : "기준값과 같거나 작은"} 수만 선택해야 해.`}</p></div>
-              {feedback === "success" && <span className="feedback-score">+{hintOpen ? 1 : 2} STARS</span>}
-            </div>
-          )}
-
-          <div className="action-bar">
-            <button type="button" className="secondary-action" onClick={() => setHintOpen((value) => !value)}><Lightbulb size={17} /> HINT <span>{hintOpen ? "ON" : "OFF"}</span></button>
-            <div className="action-bar__right"><button type="button" className="reset-action" onClick={resetRound}><RotateCcw size={16} /> RESET</button>{feedback === "success" ? <button type="button" className="primary-action" onClick={nextRound}>{isLastRound ? "PLAY AGAIN" : "NEXT NODE"} <ArrowRight size={18} /></button> : <button type="button" className="primary-action" onClick={submit}>LOCK RANGE <Flag size={17} /></button>}</div>
-          </div>
-
-          {hintOpen && feedback !== "success" && <div className="hint-strip"><Lightbulb size={16} /><span><strong>힌트:</strong> {round.operator === "이상" ? "‘이상’은 기준값도 안전 구간 안에 들어가요." : "‘이하’는 기준값도 안전 구간 안에 들어가요."} 경계 노드를 기준 숫자에 맞추고, 그쪽의 칩을 골라 보세요.</span></div>}
+          {hintOpen && <div className="hint-strip"><Lightbulb size={16} /><span><strong>힌트:</strong> {round.operator === "이상" ? "이상은 기준값을 포함해. 120도 안전 숫자야." : "이하는 기준값을 포함해. 85도 안전 숫자야."}</span></div>}
         </section>
       </div>
 
-      <footer className="bottom-status"><span><i className="status-pip" /> TRAINING MODE</span><span>LESSON SYNCED</span><span>KEYBOARD READY</span><span className="bottom-status__right"><Gamepad2 size={15} /> RANGE//LINE v0.1</span></footer>
+      <footer className="arcade-footer"><span><i className="online-dot" /> TRAINING RUN</span><span>RANGE//LINE ENGINE 0.2</span><button type="button" onClick={() => setHintOpen((value) => !value)}><Sparkles size={14} /> {hintOpen ? "HINT ON" : "NEED A HINT?"}</button><span className="footer-right"><Gamepad2 size={14} /> KEYBOARD + TOUCH READY</span></footer>
     </main>
   );
 }

@@ -1,0 +1,9 @@
+/* Design reminder: scene-first storybook play — star shards live inside the scene. */
+.scene-shard-preview{position:absolute;right:28px;bottom:72px;left:28px;z-index:2;padding:11px 12px 12px;border:1px solid rgba(255,238,190,.34);border-radius:15px;background:rgba(35,32,86,.62);backdrop-filter:blur(4px)}
+.scene-shard-preview p{margin:0 0 8px;color:#ffebbd;font-family:"Space Grotesk",monospace;font-size:9px;font-weight:700;letter-spacing:.08em}
+.scene-shard-preview>div{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.story-shard{display:flex;align-items:center;justify-content:center;gap:6px;height:38px;border:1px solid rgba(255,228,164,.45);border-radius:9px;color:#fff1bd;background:rgba(255,221,144,.16);transition:transform .16s cubic-bezier(.23,1,.32,1),background .16s cubic-bezier(.23,1,.32,1),border-color .16s cubic-bezier(.23,1,.32,1)}
+.story-shard:hover{transform:translateY(-3px);border-color:#ffe5a5;background:rgba(255,221,144,.34)}
+.story-shard strong{font-family:"Space Grotesk",monospace;font-size:12px}.story-shard--picked{color:#274d56;border-color:#98dcc9;background:#a5e5d0}.story-shard--mistake{color:#713e49;border-color:#f5aa9d;background:#ffd5c5;animation:shard-shake .24s ease}.story-magic-line{margin:13px 0 0;color:#b46f69;font-size:13px;line-height:1.4}.story-card .rule-preview{margin-top:18px}
+@keyframes shard-shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media(max-width:600px){.stage-scene{min-height:520px}.lumi-speech{bottom:143px}.scene-shard-preview{right:15px;bottom:59px;left:15px;padding:9px}.scene-shard-preview p{font-size:8px}.story-shard{height:35px;gap:3px}.story-shard strong{font-size:10px}.story-shard svg{width:13px}.scene-home-label{right:16px;bottom:17px;font-size:7px}}

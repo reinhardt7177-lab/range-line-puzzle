@@ -1,229 +1,101 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  AlertTriangle,
-  ArrowRight,
-  Check,
-  Crosshair,
-  Flame,
-  Gamepad2,
-  Heart,
-  Lightbulb,
-  Pause,
-  Play,
-  RotateCcw,
-  Shield,
-  Sparkles,
-  Target,
-  Trophy,
-  Zap,
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import "../lumi-overrides.css";
+import { ArrowRight, Check, Heart, Home as HomeIcon, Lock, RotateCcw, Sparkles, Star, Wind, X } from "lucide-react";
 
-// Design reminder: 숫자 아케이드 관제실 — this is a game first, with math as
-// the combat rule. Cobalt arena, tangerine threats, mint correct hits,
-// moving enemies, short rounds, and tactile controls.
+// Design reminder: 별빛 구조대 루미 — storybook play, warm emotion, no HUD-first layout.
+// Math is the path-building action: choose numbers that satisfy 이상/이하.
 
 type Operator = "이상" | "이하";
-type Phase = "playing" | "paused" | "cleared" | "gameover";
+type Phase = "story" | "play" | "success" | "mistake" | "complete";
 
-type Round = {
+type Scene = {
+  title: string;
+  story: string;
   bound: number;
   operator: Operator;
   numbers: number[];
-  title: string;
-  color: string;
+  safeMessage: string;
+  sky: "forest" | "cloud" | "home";
 };
 
-type Enemy = {
-  id: number;
-  value: number;
-  left: number;
-  y: number;
-  speed: number;
-};
-
-const rounds: Round[] = [
-  { bound: 120, operator: "이상", numbers: [112, 120, 127, 138], title: "GATE 01 / 기준값 이상", color: "mint" },
-  { bound: 85, operator: "이하", numbers: [72, 84, 85, 93], title: "GATE 02 / 기준값 이하", color: "orange" },
-  { bound: 300, operator: "이상", numbers: [264, 299, 300, 318], title: "GATE 03 / 기준값 이상", color: "mint" },
-  { bound: 45, operator: "이하", numbers: [39, 45, 47, 52], title: "GATE 04 / 기준값 이하", color: "orange" },
+const scenes: Scene[] = [
+  { title: "첫 번째 별 조각", story: "폭풍이 지나간 숲에 별 조각이 떨어졌어. 루미가 집으로 갈 길을 밝혀 주자.", bound: 120, operator: "이상", numbers: [82, 120, 137, 96], safeMessage: "120과 137이 길을 밝혔어!", sky: "forest" },
+  { title: "구름 사이의 길", story: "바람이 더 세졌어. 낮은 구름길을 찾아야 루미가 무사히 건널 수 있어.", bound: 85, operator: "이하", numbers: [62, 85, 96, 110], safeMessage: "62와 85가 구름길을 만들었어!", sky: "cloud" },
+  { title: "집으로 가는 문", story: "마지막 문은 기준값을 꼭 기억하는 별빛 문이야. 루미의 집이 기다리고 있어.", bound: 300, operator: "이상", numbers: [249, 300, 318, 281], safeMessage: "300과 318이 마지막 문을 열었어!", sky: "home" },
 ];
 
-function RangeMark() {
-  return <span className="range-mark" aria-hidden="true"><i /><b /><i /></span>;
-}
-
-function GateBadge({ operator }: { operator: Operator }) {
-  return <span className={`gate-badge gate-badge--${operator === "이상" ? "mint" : "orange"}`} aria-hidden="true"><span className="gate-badge__orbit" /><span className="gate-badge__core">{operator === "이상" ? "≥" : "≤"}</span><span className="gate-badge__ray gate-badge__ray--a" /><span className="gate-badge__ray gate-badge__ray--b" /></span>;
-}
-
-function ArenaArt() {
+function StoryArt({ sky, glow = 0 }: { sky: Scene["sky"]; glow?: number }) {
   return (
-    <svg className="arena-art" viewBox="0 0 720 390" aria-hidden="true" preserveAspectRatio="none">
+    <svg className="story-art" viewBox="0 0 720 460" preserveAspectRatio="none" aria-hidden="true">
       <defs>
-        <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stopColor="#162e69" /><stop offset="1" stopColor="#081331" /></linearGradient>
-        <linearGradient id="beam" x1="0" x2="1"><stop offset="0" stopColor="#53d6b0" stopOpacity="0" /><stop offset="0.5" stopColor="#53d6b0" stopOpacity="0.85" /><stop offset="1" stopColor="#53d6b0" stopOpacity="0" /></linearGradient>
-        <filter id="glow"><feGaussianBlur stdDeviation="6" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+        <linearGradient id="lumiSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1c2767" /><stop offset="0.62" stopColor="#4a4285" /><stop offset="1" stopColor="#f6a873" /></linearGradient>
+        <linearGradient id="lumiGround" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#233767" /><stop offset="1" stopColor="#112343" /></linearGradient>
+        <filter id="lumiGlow"><feGaussianBlur stdDeviation="7" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
       </defs>
-      <rect width="720" height="390" fill="url(#sky)" />
-      <path d="M0 292 L112 246 L201 284 L314 224 L422 267 L536 206 L720 261 V390 H0Z" fill="#0b1b43" opacity=".9" />
-      <path d="M0 331 L125 290 L218 320 L360 271 L470 316 L591 256 L720 295 V390 H0Z" fill="#07132f" />
-      <path d="M75 114 H640" stroke="url(#beam)" strokeWidth="2" filter="url(#glow)" opacity=".55" />
-      <path d="M22 93 L121 93 M586 93 L698 93" stroke="#5578d8" strokeWidth="1" opacity=".6" />
-      <path d="M22 100 L71 100 M639 100 L698 100" stroke="#ff9e4a" strokeWidth="2" opacity=".75" />
-      <g fill="#9cb4fb" opacity=".8"><circle cx="94" cy="53" r="1.5" /><circle cx="157" cy="142" r="1.5" /><circle cx="244" cy="82" r="1" /><circle cx="353" cy="42" r="1.5" /><circle cx="468" cy="117" r="1" /><circle cx="602" cy="55" r="1.5" /><circle cx="662" cy="151" r="1" /></g>
-      <g fill="#ff9e4a" opacity=".85"><path d="M32 174h3v3h-3z" /><path d="M681 181h3v3h-3z" /><path d="M508 67h3v3h-3z" /></g>
-      <g transform="translate(290 306)" filter="url(#glow)"><path d="M70 0 L108 72 L70 59 L32 72Z" fill="#3156d8" stroke="#9db6ff" strokeWidth="2" /><path d="M70 8 L80 42 L70 37 L60 42Z" fill="#ff9e4a" /><path d="M35 58 L10 86 L52 70Z" fill="#1b3988" stroke="#718fe8" strokeWidth="2" /><path d="M105 58 L130 86 L88 70Z" fill="#1b3988" stroke="#718fe8" strokeWidth="2" /></g>
-      <path d="M0 351 Q180 329 360 351 T720 351" fill="none" stroke="#3156d8" strokeWidth="2" opacity=".55" />
+      <rect width="720" height="460" fill="url(#lumiSky)" />
+      <circle cx="585" cy="96" r="52" fill="#fff1c7" opacity=".93" filter="url(#lumiGlow)" /><circle cx="603" cy="84" r="52" fill="#554982" />
+      <g fill="#fff1c7" opacity=".85"><circle cx="87" cy="67" r="2" /><circle cx="160" cy="117" r="1.5" /><circle cx="267" cy="51" r="2" /><circle cx="389" cy="92" r="1.5" /><circle cx="501" cy="43" r="2" /><circle cx="663" cy="157" r="1.5" /><circle cx="47" cy="188" r="1.2" /></g>
+      <path d="M0 304 Q115 251 218 311 T421 287 T720 302 V460 H0Z" fill="#263664" opacity=".92" /><path d="M0 356 Q128 286 236 343 T465 335 T720 345 V460 H0Z" fill="url(#lumiGround)" />
+      <g opacity=".38" fill="#172b50"><path d="M45 340 l31-88 29 88z" /><path d="M133 340 l43-117 41 117z" /><path d="M550 341 l42-120 45 120z" /><path d="M633 340 l29-91 27 91z" /></g>
+      {sky === "cloud" && <g fill="#f6d3c1" opacity=".9"><path d="M0 228 C80 168 142 216 201 188 C267 157 315 208 375 183 C451 152 493 204 553 179 C620 151 678 193 720 163 V278 H0Z" /><path d="M0 270 C70 236 131 264 201 240 C287 213 346 264 420 236 C486 211 559 259 629 228 C673 209 704 224 720 218 V302 H0Z" opacity=".65" /></g>}
+      <g transform="translate(112 286)"><path d="M0 95 L50 22 L103 95Z" fill="#263a68" stroke="#9b9edb" strokeWidth="3" /><path d="M30 95 V62 H72 V95" fill="#ef9a78" /><path d="M41 62 Q51 47 61 62" fill="#ffdfad" /><path d="M29 30 L50 0 L75 30" fill="#f7bd79" /><circle cx="50" cy="26" r="7" fill="#fff1c7" filter="url(#lumiGlow)" /><path d="M50 7 V-18" stroke="#f7bd79" strokeWidth="3" /><circle cx="50" cy="-21" r="5" fill="#f9d67e" /></g>
+      <path d="M480 374 Q530 337 592 363 T720 350" fill="none" stroke="#f9d786" strokeWidth="4" opacity={0.22 + glow * .12} filter="url(#lumiGlow)" />
+      <g transform="translate(385 314)" filter="url(#lumiGlow)"><path d="M28 0 L36 20 L58 21 L41 35 L47 57 L28 44 L8 57 L14 35 L-3 21 L20 20Z" fill="#ffdf8b" /><circle cx="21" cy="27" r="3" fill="#3a326e" /><circle cx="35" cy="27" r="3" fill="#3a326e" /><path d="M23 35 Q28 41 34 35" fill="none" stroke="#3a326e" strokeWidth="2" strokeLinecap="round" /></g>
+      {glow > 0 && <g fill="#fff1ae" opacity={Math.min(0.9, glow * .18)} filter="url(#lumiGlow)"><circle cx="287" cy="303" r="5" /><circle cx="336" cy="337" r="4" /><circle cx="430" cy="286" r="5" /><circle cx="462" cy="328" r="3" /><circle cx="520" cy="307" r="4" /></g>}
     </svg>
   );
 }
 
-function EnemyBot({ enemy, onFire, hitFlash }: { enemy: Enemy; onFire: () => void; hitFlash: boolean }) {
-  return (
-    <button type="button" className={`enemy-bot ${hitFlash ? "enemy-bot--flash" : ""}`} style={{ left: `${enemy.left}%`, top: `${enemy.y}%` }} onClick={onFire} aria-label={`${enemy.value} 숫자 적 공격`}>
-      <span className="enemy-bot__ring" />
-      <span className="enemy-bot__antenna" /><span className="enemy-bot__body"><i /><strong>{enemy.value}</strong><i /><b>{enemy.value % 2 === 0 ? "EVEN" : "ODD"}</b></span>
-      <span className="enemy-bot__shadow" />
-    </button>
-  );
+function LumiMark({ small = false }: { small?: boolean }) {
+  return <span className={small ? "lumi-mark lumi-mark--small" : "lumi-mark"}><span className="lumi-mark__star">★</span><span className="lumi-mark__eye lumi-mark__eye--a" /><span className="lumi-mark__eye lumi-mark__eye--b" /></span>;
 }
 
 export default function Home() {
-  const [roundIndex, setRoundIndex] = useState(0);
-  const [boundary, setBoundary] = useState(rounds[0].bound);
-  const [phase, setPhase] = useState<Phase>("playing");
-  const [timeLeft, setTimeLeft] = useState(45);
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const [phase, setPhase] = useState<Phase>("story");
+  const [picked, setPicked] = useState<number[]>([]);
   const [lives, setLives] = useState(3);
-  const [score, setScore] = useState(0);
-  const [combo, setCombo] = useState(0);
-  const [wave, setWave] = useState(1);
-  const [enemies, setEnemies] = useState<Enemy[]>([
-    { id: 1, value: 112, left: 17, y: 14, speed: 0.32 },
-    { id: 2, value: 120, left: 43, y: 31, speed: 0.27 },
-    { id: 3, value: 138, left: 76, y: 7, speed: 0.23 },
-  ]);
-  const [message, setMessage] = useState("적 숫자를 클릭해서 안전 구역으로 돌려보내!");
-  const [hitFlash, setHitFlash] = useState<number | null>(null);
-  const [hintOpen, setHintOpen] = useState(false);
-  const enemyId = useRef(4);
-  const spawnCount = useRef(0);
-  const round = rounds[roundIndex];
-  const isCorrectBoundary = boundary === round.bound;
-  const correctValues = useMemo(() => round.numbers.filter((value) => round.operator === "이상" ? value >= round.bound : value <= round.bound), [round]);
-  const timerPercent = (timeLeft / 45) * 100;
-  const boundaryPercent = Math.min(92, Math.max(8, ((boundary - 40) / 280) * 100));
-  const boundaryChoices = useMemo(() => Array.from(new Set([round.bound - 80, round.bound - 40, round.bound, round.bound + 40, round.bound + 80].filter((value) => value >= 40 && value <= 320))), [round]);
+  const [light, setLight] = useState(0);
+  const [mistakeValue, setMistakeValue] = useState<number | null>(null);
+  const [message, setMessage] = useState("");
+  const scene = scenes[sceneIndex];
+  const safeNumbers = useMemo(() => scene.numbers.filter((value) => scene.operator === "이상" ? value >= scene.bound : value <= scene.bound), [scene]);
+  const progress = ((sceneIndex + (phase === "success" || phase === "complete" ? 1 : 0)) / scenes.length) * 100;
 
-  const setBoundaryValue = (value: number) => {
-    setBoundary(Math.max(40, Math.min(320, value)));
-    setMessage(value === round.bound ? "경계가 정확해! 이제 안전 숫자만 클릭해." : "좋아. 숫자 버튼으로 경계를 빠르게 조절할 수 있어.");
+  const beginScene = () => { setPicked([]); setMistakeValue(null); setMessage(""); setPhase("play"); };
+  const pickFromStory = (value: number) => {
+    const correct = safeNumbers.includes(value);
+    setPicked(correct ? [value] : []);
+    setMistakeValue(correct ? null : value);
+    setLight(correct ? 1 : 0);
+    setMessage(correct ? "좋아, 이 별이 루미의 길을 밝혀 줘!" : `${value}은(는) 아직 경계 밖이야.`);
+    setPhase(correct ? "play" : "mistake");
   };
-
-  useEffect(() => {
-    if (phase !== "playing") return;
-    const movement = window.setInterval(() => {
-      setEnemies((current) => {
-        const next = current.map((enemy) => ({ ...enemy, y: enemy.y + enemy.speed + wave * 0.015 }));
-        const reached = next.filter((enemy) => enemy.y >= 82);
-        if (reached.length) {
-          setLives((value) => Math.max(0, value - reached.length));
-          setCombo(0);
-          setMessage(`${reached.length}개의 숫자가 방어선을 통과했어. 다시 범위를 확인해!`);
-        }
-        return next.filter((enemy) => enemy.y < 82);
-      });
-    }, 360);
-    const spawner = window.setInterval(() => {
-      const value = round.numbers[spawnCount.current % round.numbers.length];
-      spawnCount.current += 1;
-      setEnemies((current) => current.length > 5 ? current : [...current, { id: enemyId.current++, value, left: 8 + ((spawnCount.current * 29) % 82), y: -8, speed: 0.2 + (spawnCount.current % 3) * 0.05 }]);
-    }, 1350);
-    return () => { window.clearInterval(movement); window.clearInterval(spawner); };
-  }, [phase, round, wave]);
-
-  useEffect(() => {
-    if (phase !== "playing") return;
-    const timer = window.setInterval(() => setTimeLeft((value) => {
-      if (value <= 1) { setPhase("cleared"); setMessage("시간 안에 방어선을 지켰어! 다음 게이트가 열려."); return 0; }
-      return value - 1;
-    }), 1000);
-    return () => window.clearInterval(timer);
-  }, [phase]);
-
-  useEffect(() => {
-    if (lives <= 0 && phase === "playing") { setPhase("gameover"); setMessage("방어선이 무너졌어. 범위를 다시 잠그고 재도전하자."); }
-  }, [lives, phase]);
-
-  const resetMission = () => {
-    setBoundary(round.bound); setPhase("playing"); setTimeLeft(45); setLives(3); setScore(0); setCombo(0); setWave(1); setHintOpen(false); setMessage("적 숫자를 클릭해서 안전 구역으로 돌려보내!");
-    setEnemies([{ id: enemyId.current++, value: round.numbers[0], left: 17, y: 14, speed: 0.32 }, { id: enemyId.current++, value: round.numbers[1], left: 43, y: 31, speed: 0.27 }, { id: enemyId.current++, value: round.numbers[2], left: 76, y: 7, speed: 0.23 }]);
-  };
-
-  const nextGate = () => {
-    const nextIndex = (roundIndex + 1) % rounds.length;
-    setRoundIndex(nextIndex); setBoundary(rounds[nextIndex].bound); setPhase("playing"); setTimeLeft(45); setLives(3); setCombo(0); setWave((value) => Math.min(3, value + 1)); setMessage("새 게이트의 기준값을 잠가!");
-    setEnemies([{ id: enemyId.current++, value: rounds[nextIndex].numbers[0], left: 20, y: 14, speed: 0.32 }, { id: enemyId.current++, value: rounds[nextIndex].numbers[2], left: 64, y: 28, speed: 0.25 }]);
-  };
-
-  const fireAtEnemy = (enemy: Enemy) => {
-    if (phase !== "playing") return;
-    if (!isCorrectBoundary) {
-      setLives((value) => Math.max(0, value - 1)); setCombo(0); setMessage(`먼저 경계를 ${round.bound}에 잠가야 해. 지금은 ${boundary}야.`); setHitFlash(enemy.id); window.setTimeout(() => setHitFlash(null), 240); return;
+  const chooseNumber = (value: number) => {
+    if (phase !== "play") return;
+    const correct = safeNumbers.includes(value);
+    if (!correct) {
+      setMistakeValue(value); setLives((current) => Math.max(0, current - 1)); setPhase("mistake"); setMessage(`${value}은(는) ${scene.bound} ${scene.operator === "이상" ? "보다 작아" : "보다 커"}.`); return;
     }
-    const isValid = correctValues.includes(enemy.value);
-    if (isValid) {
-      setEnemies((current) => current.filter((item) => item.id !== enemy.id)); setCombo((value) => value + 1); setScore((value) => value + 100 + combo * 25); setHitFlash(enemy.id); setMessage(`${enemy.value} 격추 성공! ${round.bound}${round.operator === "이상" ? " 이상" : " 이하"} 구역에 들어왔어.`); window.setTimeout(() => setHitFlash(null), 240);
-      if ((combo + 1) % 5 === 0) { setWave((value) => Math.min(3, value + 1)); setMessage("콤보 보너스! 적 웨이브가 빨라졌어."); }
-    } else {
-      setLives((value) => Math.max(0, value - 1)); setCombo(0); setMessage(`${enemy.value}는 안전 구역 숫자가 아니야. 경계값을 다시 확인해!`); setHitFlash(enemy.id); window.setTimeout(() => setHitFlash(null), 240);
+    if (!picked.includes(value)) {
+      const next = [...picked, value]; setPicked(next); setLight((current) => Math.min(6, current + 1));
+      if (safeNumbers.every((item) => next.includes(item))) { setMessage(scene.safeMessage); setPhase("success"); } else setMessage("좋아! 길이 한 칸 더 빛났어.");
     }
   };
+  const nextScene = () => { if (sceneIndex === scenes.length - 1) setPhase("complete"); else { setSceneIndex((current) => current + 1); setPhase("story"); } };
+  const restart = () => { setSceneIndex(0); setPhase("story"); setPicked([]); setLives(3); setLight(0); setMistakeValue(null); setMessage(""); };
 
   return (
-    <main className="arcade-app">
-      <header className="arcade-topbar">
-        <div className="brand-lockup"><div className="brand-symbol"><RangeMark /></div><div><p className="brand-kicker">RANGE//LINE ARCADE</p><p className="brand-name">BOUNDARY<span>BREAK</span></p></div></div>
-        <div className="topbar-center"><span className="mini-status"><i /> SERVER ONLINE</span><span className="topbar-stage">UNIT 01 / LESSON 02</span></div>
-        <div className="topbar-stats"><div><span>SCORE</span><strong>{score.toString().padStart(5, "0")}</strong></div><div className="combo-readout"><Flame size={15} /><span>{combo}x</span></div><button type="button" className="profile-chip">J</button></div>
-      </header>
+    <main className="lumi-app">
+      <header className="lumi-header"><div className="lumi-brand"><div className="lumi-logo"><LumiMark small /></div><div><p>STARLIGHT RESCUE</p><strong>루미의 귀가</strong></div></div><div className="chapter-count">밤 {sceneIndex + 1} <span>/</span> 3</div><div className="header-tools"><div className="home-light"><HomeIcon size={15} /><span>집의 빛</span><div>{[0, 1, 2, 3, 4, 5].map((item) => <i key={item} className={item < light ? "on" : ""} />)}</div></div><div className="heart-row">{[0, 1, 2].map((item) => <Heart key={item} size={18} fill={item < lives ? "#ff8f83" : "transparent"} color={item < lives ? "#ff8f83" : "#c5bfd0"} />)}</div></div></header>
 
-      <div className="arcade-layout">
-        <aside className="control-rail">
-          <div className="rail-label"><span>MISSION</span><span>02 / 11</span></div>
-          <div className="mission-title"><span className="mission-index">LEVEL 02</span><h1>경계선<br /><em>브레이크</em></h1><p>범위 안 숫자만 골라서 방어선을 지켜.</p></div>
-          <div className="rule-card"><div className="rule-card__top"><Shield size={18} /><span>RULE CORE</span></div><strong>{round.bound} {round.operator}</strong><p>{round.operator === "이상" ? "같거나 큰 숫자" : "같거나 작은 숫자"}가 안전 구역이야.</p></div>
-          <div className="health-block"><div className="health-label"><span>SHIELD</span><span>{lives} / 3</span></div><div className="hearts">{[0, 1, 2].map((index) => <Heart key={index} size={20} fill={index < lives ? "#ff6e72" : "transparent"} color={index < lives ? "#ff6e72" : "#5d6f9f"} />)}</div></div>
-          <div className="progress-block"><div className="health-label"><span>GATE PROGRESS</span><span>GATE {roundIndex + 1} / 04</span></div><div className="gate-progress"><i style={{ width: `${((roundIndex + (phase === "cleared" ? 1 : 0)) / rounds.length) * 100}%` }} /></div></div>
-          <div className="tip-card"><Lightbulb size={16} /><p><strong>작전 힌트</strong><br />경계값을 먼저 맞춘 뒤, 안전한 숫자 적만 클릭해.</p></div>
-        </aside>
+      <div className="lumi-progress"><div style={{ width: `${progress}%` }} /></div>
 
-        <section className="play-zone">
-          <div className="play-header"><div><p className="eyebrow">LIVE DEFENSE / {round.title}</p><h2>{message}</h2></div><div className="play-actions"><button type="button" className="icon-action" onClick={() => setPhase((value) => value === "playing" ? "paused" : "playing")} aria-label="일시정지">{phase === "playing" ? <Pause size={17} /> : <Play size={17} />}</button><button type="button" className="icon-action" onClick={resetMission} aria-label="재시작"><RotateCcw size={17} /></button></div></div>
+      {phase === "complete" ? <section className="complete-screen"><div className="complete-art"><StoryArt sky="home" glow={6} /><div className="complete-lumi"><LumiMark /></div></div><div className="complete-copy"><p className="overline">STARLIGHT RESTORED</p><h1>루미가<br /><em>집에 도착했어.</em></h1><p>네가 고른 별 조각으로 밤하늘이 다시 빛났어. 루미는 오늘의 길을 오래 기억할 거야.</p><div className="final-reward"><Sparkles size={21} /><div><strong>별빛 구조대 배지 획득</strong><span>기준값을 포함한 범위를 찾았어요.</span></div></div><button type="button" className="lumi-button" onClick={restart}>다시 별빛 모으기 <RotateCcw size={16} /></button></div></section> : <section className="lumi-stage"><div className="stage-scene"><StoryArt sky={scene.sky} glow={light} /><div className="scene-vignette" /><div className="scene-caption"><span className="chapter-tag">밤 {sceneIndex + 1} · {scene.title}</span><h1>{phase === "story" ? "루미의 집에" : "빛나는 길을"}<br /><em>{phase === "story" ? "돌아가는 길" : "만들어 주세요"}</em></h1></div><div className="lumi-speech"><LumiMark small /><span>{phase === "story" ? "별 조각을 찾아서 집에 가고 싶어…" : phase === "mistake" ? "앗, 바람이 불었어. 다른 조각을 골라 보자!" : phase === "success" ? "내 길이 빛나고 있어!" : "어떤 조각이 내 길일까?"}</span></div><div className="scene-shard-preview"><p>루미의 길을 밝혀 줄 별</p><div>{scene.numbers.map((value) => <button type="button" key={value} onClick={() => pickFromStory(value)} className={picked.includes(value) ? "story-shard story-shard--picked" : mistakeValue === value ? "story-shard story-shard--mistake" : "story-shard"}><Star size={17} fill="currentColor" /><strong>{value}</strong></button>)}</div></div><div className="scene-home-label"><HomeIcon size={14} /> LUMI'S HOME</div></div>
 
-          <div className="battle-arena">
-            <ArenaArt />
-            <div className="arena-label arena-label--left"><Crosshair size={15} /> CLICK TO BLAST / SAFE NUMBERS ONLY</div><div className="arena-label arena-label--right">WAVE 0{wave} <span className="wave-dot" /></div><div className="arena-scanline" /><div className="gate-visual"><GateBadge operator={round.operator} /><span><b>{round.bound} {round.operator}</b><small>GATE RULE</small></span></div>
-            <div className="timer-box"><span>TIME</span><strong>{String(timeLeft).padStart(2, "0")}</strong><i style={{ width: `${timerPercent}%` }} /></div>
-            <div className="danger-meter"><span>DANGER</span><div>{[0, 1, 2, 3, 4].map((index) => <i key={index} className={index < Math.min(5, Math.ceil(enemies.length / 2)) ? "danger-on" : ""} />)}</div></div>
-            <div className="enemy-layer">{enemies.map((enemy) => <EnemyBot key={enemy.id} enemy={enemy} hitFlash={hitFlash === enemy.id} onFire={() => fireAtEnemy(enemy)} />)}</div>
-            <div className="shield-line"><span>SHIELD LINE</span><i /></div>
-            <div className="pilot-ship"><div className="pilot-ship__core" /><div className="pilot-ship__wing pilot-ship__wing--left" /><div className="pilot-ship__wing pilot-ship__wing--right" /><span>YOU</span></div>
-            {phase !== "playing" && <div className="phase-overlay"><div className="overlay-badge">{phase === "cleared" ? <Trophy size={22} /> : phase === "gameover" ? <AlertTriangle size={22} /> : <Pause size={22} />}</div><p className="overlay-kicker">{phase === "cleared" ? "GATE CLEARED" : phase === "gameover" ? "SHIELD DOWN" : "PAUSED"}</p><h3>{phase === "cleared" ? "좋아, 다음 게이트로." : phase === "gameover" ? "한 번 더 잠가 보자." : "잠깐 멈춤"}</h3><p>{phase === "cleared" ? "범위 판단이 정확했어. 더 빠른 웨이브가 기다려." : phase === "gameover" ? "경계값을 정확히 놓고 안전 숫자만 골라야 해." : "작전을 정리하고 다시 시작할 준비가 되면 눌러."}</p><button type="button" className="overlay-action" onClick={phase === "cleared" ? nextGate : resetMission}>{phase === "cleared" ? "NEXT GATE" : phase === "gameover" ? "RETRY RUN" : "RESUME"} <ArrowRight size={16} /></button></div>}
-          </div>
-
-          <div className="command-deck">
-            <div className="command-copy"><p className="eyebrow">COMMAND DECK</p><h3>경계를 잠그면 공격이 가능해.</h3><p>{isCorrectBoundary ? "좋아. 이제 안전 구역 숫자를 클릭해서 격추해." : `슬라이더를 ${round.bound}에 맞추면 공격 시스템이 열려.`}</p></div>
-            <div className="boundary-control"><div className="boundary-control__label"><span>BOUNDARY NODE</span><strong>{boundary}</strong></div><div className="boundary-line"><div className={`boundary-safe boundary-safe--${round.operator === "이상" ? "right" : "left"}`} style={round.operator === "이상" ? { left: `${boundaryPercent}%`, right: 0 } : { left: 0, right: `${100 - boundaryPercent}%` }} /><div className="boundary-track" /><div className="boundary-handle" style={{ left: `${boundaryPercent}%` }}><span>{boundary}</span><i /></div></div><input type="range" min="40" max="320" step="5" value={boundary} onChange={(event) => setBoundaryValue(Number(event.target.value))} aria-label="경계 노드" /><div className="boundary-scale"><span>40</span><span>120</span><span>200</span><span>320</span></div><div className="boundary-quick-row">{boundaryChoices.map((value) => <button type="button" key={value} className={value === boundary ? "boundary-quick boundary-quick--active" : "boundary-quick"} onClick={() => setBoundaryValue(value)}>{value}{value === round.bound && <small>정답</small>}</button>)}<label className="boundary-input"><span>직접입력</span><input type="number" min="40" max="320" step="1" value={boundary} onChange={(event) => setBoundaryValue(Number(event.target.value))} /></label></div><button type="button" className="snap-button" onClick={() => setBoundaryValue(round.bound)}><Target size={14} /> 기준값 {round.bound}에 바로 맞추기</button></div>
-            <div className="command-rule"><div className={`operator-chip operator-chip--${round.operator === "이상" ? "mint" : "orange"}`}>{round.operator}</div><span>{round.bound} 포함</span></div>
-          </div>
-
-          <div className="learning-strip"><div className="learning-card"><div className="learning-visual learning-visual--one"><span>1</span><i /></div><div><strong>기준값 찾기</strong><p>미션의 숫자를 먼저 확인해.</p></div></div><div className="learning-card"><div className="learning-visual learning-visual--two"><i /><b /></div><div><strong>경계값 포함</strong><p>이상·이하는 기준값도 포함!</p></div></div><div className="learning-card"><div className="learning-visual learning-visual--three"><span>127</span><Check size={13} /></div><div><strong>안전 숫자 클릭</strong><p>구간 안의 적만 격추해.</p></div></div></div>
-
-          {hintOpen && <div className="hint-strip"><Lightbulb size={16} /><span><strong>힌트:</strong> {round.operator === "이상" ? "이상은 기준값을 포함해. 120도 안전 숫자야." : "이하는 기준값을 포함해. 85도 안전 숫자야."}</span></div>}
-        </section>
-      </div>
-
-      <footer className="arcade-footer"><span><i className="online-dot" /> TRAINING RUN</span><span>RANGE//LINE ENGINE 0.2</span><button type="button" onClick={() => setHintOpen((value) => !value)}><Sparkles size={14} /> {hintOpen ? "HINT ON" : "NEED A HINT?"}</button><span className="footer-right"><Gamepad2 size={14} /> KEYBOARD + TOUCH READY</span></footer>
+          <div className="play-panel">{phase === "story" && <div className="story-card"><p className="overline">루미에게 온 별빛 편지</p><h2>{scene.story}</h2><p className="story-magic-line">{scene.bound}보다 {scene.operator === "이상" ? "크거나 같은" : "작거나 같은"} 별만 루미의 길을 밝혀 줘.</p><div className="rule-preview"><div className="rule-icon"><Star size={18} fill="currentColor" /></div><div><span>오늘 밤의 별빛 규칙</span><strong>{scene.bound} {scene.operator}</strong><small>{scene.operator === "이상" ? "같거나 큰 조각을 찾아요" : "같거나 작은 조각을 찾아요"}</small></div></div><button type="button" className="lumi-button lumi-button--wide" onClick={beginScene}>길을 찾아 출발하기 <ArrowRight size={18} /></button><p className="tiny-note">위 장면의 별을 바로 눌러도 좋아요.</p></div>}
+          {(phase === "play" || phase === "mistake" || phase === "success") && <div className="choice-card"><div className="choice-card__top"><div><p className="overline">CHOOSE THE STAR SHARDS</p><h2><strong>{scene.bound} {scene.operator}</strong>인 조각을 골라 줘.</h2></div><div className="choice-rule"><span>기준값</span><b>{scene.bound}</b><i>{scene.operator === "이상" ? "포함" : "포함"}</i></div></div><div className="path-preview"><div className="path-line"><i className="path-light" style={{ width: `${Math.min(93, 23 + picked.length * 24)}%` }} /></div><div className="path-lumi"><LumiMark small /></div><div className="path-home"><HomeIcon size={18} /></div></div><p className="choose-help">{message || "정답 별 조각을 모두 모으면 길이 완성돼요."}</p><div className="shard-grid">{scene.numbers.map((value) => { const isPicked = picked.includes(value); const isMistake = mistakeValue === value; return <button type="button" key={value} className={`shard-button ${isPicked ? "shard-button--picked" : ""} ${isMistake ? "shard-button--mistake" : ""}`} onClick={() => chooseNumber(value)}><span className="shard-crystal"><Star size={20} fill="currentColor" /></span><strong>{value}</strong>{isPicked && <Check size={15} />}{isMistake && <X size={15} />}</button>; })}</div>{phase === "mistake" && <div className="mistake-note"><Wind size={16} /><span><strong>{mistakeValue}</strong>은(는) 경계 밖이에요. {scene.bound} {scene.operator === "이상" ? "이상" : "이하"}를 다시 생각해 보자.</span><button type="button" onClick={() => { setMistakeValue(null); setPhase("play"); }}>다시 고르기</button></div>}{phase === "success" && <div className="success-note"><Sparkles size={17} /><span>{scene.safeMessage} 이제 다음 밤으로 갈 수 있어.</span><button type="button" onClick={nextScene}>{sceneIndex === scenes.length - 1 ? "집 불 켜기" : "다음 장면"} <ArrowRight size={15} /></button></div>}</div>}
+          <div className="learning-foot"><span><Lock size={13} /> 수학 미션 {sceneIndex + 1}</span><span>정답 별빛 {picked.length} / {safeNumbers.length}</span></div></div></section>}
     </main>
   );
 }

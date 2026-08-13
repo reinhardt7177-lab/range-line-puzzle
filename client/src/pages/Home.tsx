@@ -52,6 +52,10 @@ function RangeMark() {
   return <span className="range-mark" aria-hidden="true"><i /><b /><i /></span>;
 }
 
+function GateBadge({ operator }: { operator: Operator }) {
+  return <span className={`gate-badge gate-badge--${operator === "이상" ? "mint" : "orange"}`} aria-hidden="true"><span className="gate-badge__orbit" /><span className="gate-badge__core">{operator === "이상" ? "≥" : "≤"}</span><span className="gate-badge__ray gate-badge__ray--a" /><span className="gate-badge__ray gate-badge__ray--b" /></span>;
+}
+
 function ArenaArt() {
   return (
     <svg className="arena-art" viewBox="0 0 720 390" aria-hidden="true" preserveAspectRatio="none">
@@ -77,8 +81,8 @@ function ArenaArt() {
 function EnemyBot({ enemy, onFire, hitFlash }: { enemy: Enemy; onFire: () => void; hitFlash: boolean }) {
   return (
     <button type="button" className={`enemy-bot ${hitFlash ? "enemy-bot--flash" : ""}`} style={{ left: `${enemy.left}%`, top: `${enemy.y}%` }} onClick={onFire} aria-label={`${enemy.value} 숫자 적 공격`}>
-      <span className="enemy-bot__antenna" />
-      <span className="enemy-bot__body"><i /><strong>{enemy.value}</strong><i /></span>
+      <span className="enemy-bot__ring" />
+      <span className="enemy-bot__antenna" /><span className="enemy-bot__body"><i /><strong>{enemy.value}</strong><i /><b>{enemy.value % 2 === 0 ? "EVEN" : "ODD"}</b></span>
       <span className="enemy-bot__shadow" />
     </button>
   );
@@ -198,7 +202,7 @@ export default function Home() {
 
           <div className="battle-arena">
             <ArenaArt />
-            <div className="arena-label arena-label--left"><Crosshair size={15} /> CLICK TO BLAST / SAFE NUMBERS ONLY</div><div className="arena-label arena-label--right">WAVE 0{wave} <span className="wave-dot" /></div>
+            <div className="arena-label arena-label--left"><Crosshair size={15} /> CLICK TO BLAST / SAFE NUMBERS ONLY</div><div className="arena-label arena-label--right">WAVE 0{wave} <span className="wave-dot" /></div><div className="arena-scanline" /><div className="gate-visual"><GateBadge operator={round.operator} /><span><b>{round.bound} {round.operator}</b><small>GATE RULE</small></span></div>
             <div className="timer-box"><span>TIME</span><strong>{String(timeLeft).padStart(2, "0")}</strong><i style={{ width: `${timerPercent}%` }} /></div>
             <div className="danger-meter"><span>DANGER</span><div>{[0, 1, 2, 3, 4].map((index) => <i key={index} className={index < Math.min(5, Math.ceil(enemies.length / 2)) ? "danger-on" : ""} />)}</div></div>
             <div className="enemy-layer">{enemies.map((enemy) => <EnemyBot key={enemy.id} enemy={enemy} hitFlash={hitFlash === enemy.id} onFire={() => fireAtEnemy(enemy)} />)}</div>

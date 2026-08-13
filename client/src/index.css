@@ -92,6 +92,20 @@ button { cursor:pointer; }
 .arena-label--right { right:20px; }
 .arena-label--left svg { color:var(--orange); }
 .wave-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--mint); box-shadow:0 0 0 4px rgba(83,214,176,.12); }
+.arena-scanline { position:absolute; z-index:2; top:22%; right:0; left:0; height:1px; opacity:.35; background:linear-gradient(90deg,transparent,var(--mint),transparent); box-shadow:0 0 12px var(--mint); animation:scan 3.2s linear infinite; }
+@keyframes scan { 0% { transform:translateY(0); opacity:0; } 10% { opacity:.55; } 82% { opacity:.2; } 100% { transform:translateY(220px); opacity:0; } }
+.gate-visual { position:absolute; z-index:4; top:69px; left:50%; display:flex; align-items:center; gap:9px; transform:translateX(-50%); padding:7px 10px 7px 7px; border:1px solid rgba(120,153,239,.4); border-radius:8px; background:rgba(9,24,62,.65); backdrop-filter:blur(4px); }
+.gate-visual span:not(.gate-badge) { display:grid; gap:2px; }
+.gate-visual b { color:#e8efff; font-family:"Space Grotesk",monospace; font-size:10px; white-space:nowrap; }
+.gate-visual small { color:#7e96cc; font-family:"Space Grotesk",monospace; font-size:7px; letter-spacing:.12em; }
+.gate-badge { position:relative; display:block; width:31px; height:31px; border:1px solid currentColor; border-radius:50%; background:#10275b; box-shadow:0 0 12px currentColor; }
+.gate-badge--mint { color:var(--mint); }
+.gate-badge--orange { color:var(--orange); }
+.gate-badge__orbit { position:absolute; inset:5px; border:1px dashed currentColor; border-radius:50%; }
+.gate-badge__core { position:absolute; inset:0; display:grid; place-items:center; color:currentColor; font-family:"Space Grotesk",monospace; font-size:15px; font-weight:800; }
+.gate-badge__ray { position:absolute; top:14px; width:6px; height:2px; background:currentColor; }
+.gate-badge__ray--a { left:-4px; }
+.gate-badge__ray--b { right:-4px; }
 .timer-box { position:absolute; z-index:5; top:18px; left:50%; display:grid; width:73px; padding:5px 7px 7px; transform:translateX(-50%); text-align:center; border:1px solid #4969be; border-radius:7px; background:rgba(12,29,73,.82); }
 .timer-box span { color:#819bdc; font-size:7px; }
 .timer-box strong { color:#fff; font-family:"Space Grotesk",monospace; font-size:23px; line-height:1; }
@@ -103,12 +117,15 @@ button { cursor:pointer; }
 .danger-meter i.danger-on { background:var(--danger); box-shadow:0 0 10px rgba(255,110,114,.62); }
 .enemy-layer { position:absolute; inset:0; z-index:3; }
 .enemy-bot { position:absolute; display:grid; width:58px; padding:0; transform:translate(-50%,-50%); border:0; background:transparent; transition:top .36s linear; }
+.enemy-bot__ring { position:absolute; top:3px; left:50%; width:63px; height:36px; transform:translateX(-50%); border:1px solid rgba(255,158,74,.35); border-radius:50%; box-shadow:0 0 14px rgba(255,158,74,.2); animation:orbit 2.8s linear infinite; }
+@keyframes orbit { to { transform:translateX(-50%) rotate(360deg); } }
 .enemy-bot__antenna { width:2px; height:10px; margin:0 auto -2px; background:var(--orange); }
 .enemy-bot__antenna:after { content:""; display:block; width:5px; height:5px; margin-left:-2px; margin-top:-3px; border-radius:50%; background:var(--orange); box-shadow:0 0 10px var(--orange); }
 .enemy-bot__body { position:relative; display:flex; align-items:center; justify-content:center; gap:4px; min-height:39px; padding:0 5px; color:#26150a; border:2px solid #ffd0a2; border-radius:9px 9px 6px 6px; background:var(--orange); box-shadow:0 4px 0 #8d491f,0 0 17px rgba(255,158,74,.4); }
 .enemy-bot__body:before { content:""; position:absolute; right:5px; bottom:-8px; left:5px; height:5px; border-radius:0 0 7px 7px; background:#a95524; }
 .enemy-bot__body i { width:5px; height:5px; border-radius:50%; background:#43200d; }
 .enemy-bot__body strong { font-family:"Space Grotesk",monospace; font-size:12px; }
+.enemy-bot__body b { position:absolute; right:3px; bottom:-14px; color:#efb77f; font-family:"Space Grotesk",monospace; font-size:6px; letter-spacing:.08em; }
 .enemy-bot__shadow { display:block; width:35px; height:7px; margin:9px auto 0; border-radius:50%; background:rgba(0,0,0,.3); filter:blur(2px); }
 .enemy-bot:hover .enemy-bot__body { transform:scale(1.12); background:#ffbe76; }
 .enemy-bot--flash .enemy-bot__body { animation:hit .24s var(--ease-out); }

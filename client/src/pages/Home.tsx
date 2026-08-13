@@ -108,6 +108,12 @@ export default function Home() {
   const correctValues = useMemo(() => round.numbers.filter((value) => round.operator === "이상" ? value >= round.bound : value <= round.bound), [round]);
   const timerPercent = (timeLeft / 45) * 100;
   const boundaryPercent = Math.min(92, Math.max(8, ((boundary - 40) / 280) * 100));
+  const boundaryChoices = useMemo(() => Array.from(new Set([round.bound - 80, round.bound - 40, round.bound, round.bound + 40, round.bound + 80].filter((value) => value >= 40 && value <= 320))), [round]);
+
+  const setBoundaryValue = (value: number) => {
+    setBoundary(Math.max(40, Math.min(320, value)));
+    setMessage(value === round.bound ? "경계가 정확해! 이제 안전 숫자만 클릭해." : "좋아. 숫자 버튼으로 경계를 빠르게 조절할 수 있어.");
+  };
 
   useEffect(() => {
     if (phase !== "playing") return;
@@ -203,9 +209,11 @@ export default function Home() {
 
           <div className="command-deck">
             <div className="command-copy"><p className="eyebrow">COMMAND DECK</p><h3>경계를 잠그면 공격이 가능해.</h3><p>{isCorrectBoundary ? "좋아. 이제 안전 구역 숫자를 클릭해서 격추해." : `슬라이더를 ${round.bound}에 맞추면 공격 시스템이 열려.`}</p></div>
-            <div className="boundary-control"><div className="boundary-control__label"><span>BOUNDARY NODE</span><strong>{boundary}</strong></div><div className="boundary-line"><div className={`boundary-safe boundary-safe--${round.operator === "이상" ? "right" : "left"}`} style={round.operator === "이상" ? { left: `${boundaryPercent}%`, right: 0 } : { left: 0, right: `${100 - boundaryPercent}%` }} /><div className="boundary-track" /><div className="boundary-handle" style={{ left: `${boundaryPercent}%` }}><span>{boundary}</span><i /></div></div><input type="range" min="40" max="320" value={boundary} onChange={(event) => { setBoundary(Number(event.target.value)); setMessage("경계를 맞추고, 안전 숫자만 클릭해!"); }} aria-label="경계 노드" /><div className="boundary-scale"><span>40</span><span>120</span><span>200</span><span>320</span></div></div>
+            <div className="boundary-control"><div className="boundary-control__label"><span>BOUNDARY NODE</span><strong>{boundary}</strong></div><div className="boundary-line"><div className={`boundary-safe boundary-safe--${round.operator === "이상" ? "right" : "left"}`} style={round.operator === "이상" ? { left: `${boundaryPercent}%`, right: 0 } : { left: 0, right: `${100 - boundaryPercent}%` }} /><div className="boundary-track" /><div className="boundary-handle" style={{ left: `${boundaryPercent}%` }}><span>{boundary}</span><i /></div></div><input type="range" min="40" max="320" step="5" value={boundary} onChange={(event) => setBoundaryValue(Number(event.target.value))} aria-label="경계 노드" /><div className="boundary-scale"><span>40</span><span>120</span><span>200</span><span>320</span></div><div className="boundary-quick-row">{boundaryChoices.map((value) => <button type="button" key={value} className={value === boundary ? "boundary-quick boundary-quick--active" : "boundary-quick"} onClick={() => setBoundaryValue(value)}>{value}{value === round.bound && <small>정답</small>}</button>)}<label className="boundary-input"><span>직접입력</span><input type="number" min="40" max="320" step="1" value={boundary} onChange={(event) => setBoundaryValue(Number(event.target.value))} /></label></div><button type="button" className="snap-button" onClick={() => setBoundaryValue(round.bound)}><Target size={14} /> 기준값 {round.bound}에 바로 맞추기</button></div>
             <div className="command-rule"><div className={`operator-chip operator-chip--${round.operator === "이상" ? "mint" : "orange"}`}>{round.operator}</div><span>{round.bound} 포함</span></div>
           </div>
+
+          <div className="learning-strip"><div className="learning-card"><div className="learning-visual learning-visual--one"><span>1</span><i /></div><div><strong>기준값 찾기</strong><p>미션의 숫자를 먼저 확인해.</p></div></div><div className="learning-card"><div className="learning-visual learning-visual--two"><i /><b /></div><div><strong>경계값 포함</strong><p>이상·이하는 기준값도 포함!</p></div></div><div className="learning-card"><div className="learning-visual learning-visual--three"><span>127</span><Check size={13} /></div><div><strong>안전 숫자 클릭</strong><p>구간 안의 적만 격추해.</p></div></div></div>
 
           {hintOpen && <div className="hint-strip"><Lightbulb size={16} /><span><strong>힌트:</strong> {round.operator === "이상" ? "이상은 기준값을 포함해. 120도 안전 숫자야." : "이하는 기준값을 포함해. 85도 안전 숫자야."}</span></div>}
         </section>

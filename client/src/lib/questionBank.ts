@@ -16,6 +16,10 @@ export type NumberLineModel = {
   direction: "left" | "right" | "between";
 };
 
+export type QuestionVisual =
+  | { type: "rate-table"; title: string; rows: { range: string; size: string; fee: string }[] }
+  | { type: "bundle"; title: string; item: "상자" | "스탬프"; total: number; groupSize: number; completed: number; remainder: number; purpose: "all" | "complete" };
+
 export type QuestQuestion = {
   category: QuestionCategory;
   prompt: string;
@@ -26,6 +30,8 @@ export type QuestQuestion = {
   explanation: string;
   hint: string;
   numberLine?: NumberLineModel;
+  visual?: QuestionVisual;
+  interactiveNumberLine?: NumberLineModel;
 };
 
 export type Quest = {
@@ -40,7 +46,7 @@ export type Quest = {
   questions: QuestQuestion[];
 };
 
-const q = (category: QuestionCategory, prompt: string, options: string[], answers: string[], explanation: string, hint: string, multiple = false, input = false, numberLine?: NumberLineModel): QuestQuestion => ({ category, prompt, options, answers, explanation, hint, multiple, input, numberLine });
+const q = (category: QuestionCategory, prompt: string, options: string[], answers: string[], explanation: string, hint: string, multiple = false, input = false, numberLine?: NumberLineModel, visual?: QuestionVisual, interactiveNumberLine?: NumberLineModel): QuestQuestion => ({ category, prompt, options, answers, explanation, hint, multiple, input, numberLine, visual, interactiveNumberLine });
 
 export const quests: Quest[] = [
   {
@@ -320,3 +326,21 @@ const numberLineQuestions: Partial<Record<number, QuestQuestion[]>> = {
 };
 
 quests.forEach((quest) => quest.questions.push(...(numberLineQuestions[quest.id] ?? [])));
+
+const visualPracticeQuestions: Partial<Record<number, QuestQuestion[]>> = {
+  4: [
+    q("도전", "‘20 이상’을 수직선에 직접 나타내 보세요. 알맞은 눈금을 누르고, 점의 모양과 화살표 방향을 완성하세요.", [], ["20|include|right"], "20 이상은 20에 채워진 점을 찍고 큰 수 쪽인 오른쪽으로 화살표를 그려요.", "이상은 기준값 포함, 큰 수는 오른쪽이에요.", false, false, undefined, undefined, { min: 0, max: 40, step: 5, start: 20, startIncluded: true, direction: "right" })
+  ],
+  5: [
+    q("적용", "그림의 상자 묶음을 보고, 남은 책까지 모두 담으려면 필요한 상자 수를 고르세요.", ["4개", "5개", "6개", "7개"], ["5개"], "4상자에는 48권만 담을 수 있고 5권이 남아요. 모든 책을 담으려면 상자 1개를 더 준비해 5개가 필요해요.", "남은 책이 하나라도 있으면 상자가 더 필요해요.", false, false, undefined, { type: "bundle", title: "도서 정리 상자", item: "상자", total: 53, groupSize: 12, completed: 4, remainder: 5, purpose: "all" }),
+  ],
+  6: [
+    q("적용", "그림의 스탬프 묶음을 보고, 기념품으로 바꿀 수 있는 완성 묶음 수를 고르세요.", ["8개", "9개", "10개", "11개"], ["9개"], "스탬프 47장으로 5장씩 9묶음을 만들 수 있고 2장이 남아요. 남은 2장은 완성 묶음이 아니므로 기념품은 9개예요.", "완성된 묶음만 세고, 남은 스탬프는 따로 보세요.", false, false, undefined, { type: "bundle", title: "축제 스탬프 교환", item: "스탬프", total: 47, groupSize: 5, completed: 9, remainder: 2, purpose: "complete" }),
+  ],
+  9: [
+    q("적용", "아래 택배 요금표를 보고, 무게 3.5kg이고 세 변의 합이 80cm인 상자의 요금을 고르세요.", ["3,000원", "4,500원", "6,000원", "접수 불가"], ["4,500원"], "3.5kg은 2kg 초과 5kg 이하이고, 80cm는 100cm 이하예요. 두 조건을 모두 만족하므로 중간 요금 4,500원이에요.", "무게와 세 변의 합을 각각 표의 조건과 비교하세요.", false, false, undefined, { type: "rate-table", title: "축제 택배 요금표", rows: [{ range: "2kg 이하", size: "60cm 이하", fee: "3,000원" }, { range: "2kg 초과 ~ 5kg 이하", size: "100cm 이하", fee: "4,500원" }, { range: "5kg 초과", size: "100cm 초과", fee: "6,000원" }] }),
+    q("도전", "아래 택배 요금표를 보고, 무게 4kg이고 세 변의 합이 105cm인 상자의 판단으로 옳은 것을 고르세요.", ["기본 요금 3,000원", "중간 요금 4,500원", "특별 요금 6,000원", "표의 두 조건을 모두 만족하지 못한다"], ["표의 두 조건을 모두 만족하지 못한다"], "무게 4kg은 중간 구간이지만 세 변의 합 105cm는 100cm 이하가 아니에요. 한 조건이 맞지 않아 중간 요금으로 판단할 수 없어요.", "요금 구간의 무게 조건과 크기 조건을 모두 만족하는지 확인하세요.", false, false, undefined, { type: "rate-table", title: "축제 택배 요금표", rows: [{ range: "2kg 이하", size: "60cm 이하", fee: "3,000원" }, { range: "2kg 초과 ~ 5kg 이하", size: "100cm 이하", fee: "4,500원" }, { range: "5kg 초과", size: "100cm 초과", fee: "6,000원" }] })
+  ]
+};
+
+quests.forEach((quest) => quest.questions.push(...(visualPracticeQuestions[quest.id] ?? [])));

@@ -5,6 +5,17 @@ import { extendedQuestions } from "./extendedQuestions";
 
 export type QuestionCategory = "개념 확인" | "기본 연습" | "적용" | "오개념 교정" | "도전" | "직접 입력" | "보스전";
 
+export type NumberLineModel = {
+  min: number;
+  max: number;
+  step: number;
+  start: number;
+  end?: number;
+  startIncluded: boolean;
+  endIncluded?: boolean;
+  direction: "left" | "right" | "between";
+};
+
 export type QuestQuestion = {
   category: QuestionCategory;
   prompt: string;
@@ -14,6 +25,7 @@ export type QuestQuestion = {
   input?: boolean;
   explanation: string;
   hint: string;
+  numberLine?: NumberLineModel;
 };
 
 export type Quest = {
@@ -28,7 +40,7 @@ export type Quest = {
   questions: QuestQuestion[];
 };
 
-const q = (category: QuestionCategory, prompt: string, options: string[], answers: string[], explanation: string, hint: string, multiple = false, input = false): QuestQuestion => ({ category, prompt, options, answers, explanation, hint, multiple, input });
+const q = (category: QuestionCategory, prompt: string, options: string[], answers: string[], explanation: string, hint: string, multiple = false, input = false, numberLine?: NumberLineModel): QuestQuestion => ({ category, prompt, options, answers, explanation, hint, multiple, input, numberLine });
 
 export const quests: Quest[] = [
   {
@@ -291,3 +303,20 @@ export const bossChallenges: Record<number, BossChallenge> = {
 };
 
 quests.forEach((quest) => quest.questions.push(...extendedQuestions[quest.id]));
+
+const numberLineQuestions: Partial<Record<number, QuestQuestion[]>> = {
+  2: [
+    q("개념 확인", "그림의 수직선으로 나타낸 수의 범위는 무엇일까요?", ["20 이상", "20 초과", "20 이하", "20 미만"], ["20 이상"], "20에 채워진 점이 있고 오른쪽으로 이어지므로 20을 포함한 큰 수, 즉 20 이상이에요.", "채워진 점은 기준값을 포함하고, 오른쪽은 큰 수 쪽이에요.", false, false, { min: 0, max: 50, step: 10, start: 20, startIncluded: true, direction: "right" }),
+    q("적용", "그림의 수직선에 들어가는 수를 모두 고르세요.", ["39", "40", "41", "25"], ["39", "40", "25"], "40에 채워진 점이 있고 왼쪽으로 이어지므로 40 이하인 수가 들어가요.", "채워진 점과 왼쪽 방향을 함께 보세요.", true, false, { min: 0, max: 60, step: 10, start: 40, startIncluded: true, direction: "left" })
+  ],
+  3: [
+    q("개념 확인", "그림의 수직선으로 나타낸 수의 범위는 무엇일까요?", ["30 이상", "30 초과", "30 이하", "30 미만"], ["30 초과"], "30에 빈 점이 있고 오른쪽으로 이어지므로 30을 제외한 큰 수, 즉 30 초과예요.", "빈 점은 기준값을 포함하지 않아요.", false, false, { min: 0, max: 60, step: 10, start: 30, startIncluded: false, direction: "right" }),
+    q("적용", "그림의 수직선에 들어가는 수를 모두 고르세요.", ["70", "69", "45", "71"], ["69", "45"], "70에 빈 점이 있고 왼쪽으로 이어지므로 70보다 작은 수만 들어가요.", "70은 빈 점이라 포함되지 않아요.", true, false, { min: 30, max: 90, step: 10, start: 70, startIncluded: false, direction: "left" })
+  ],
+  4: [
+    q("개념 확인", "그림의 수직선으로 나타낸 수의 범위는 무엇일까요?", ["10 이상 25 이하", "10 초과 25 미만", "10 이상 25 미만", "10 미만 25 이상"], ["10 이상 25 미만"], "10은 채워진 점이라 포함하고, 25는 빈 점이라 포함하지 않으므로 10 이상 25 미만이에요.", "왼쪽 끝점과 오른쪽 끝점의 채움 상태를 따로 보세요.", false, false, { min: 0, max: 30, step: 5, start: 10, end: 25, startIncluded: true, endIncluded: false, direction: "between" }),
+    q("도전", "그림의 수직선에 들어가는 자연수를 모두 고르세요.", ["12", "15", "20", "21", "25"], ["15", "20"], "15의 빈 점은 제외하고 20의 채워진 점은 포함하므로 15 초과 20 이하예요.", "왼쪽은 빈 점, 오른쪽은 채워진 점이에요.", true, false, { min: 10, max: 25, step: 5, start: 15, end: 20, startIncluded: false, endIncluded: true, direction: "between" })
+  ]
+};
+
+quests.forEach((quest) => quest.questions.push(...(numberLineQuestions[quest.id] ?? [])));

@@ -1,6 +1,6 @@
-import type { QuestionCategory, QuestQuestion } from "./questionBank";
+import type { NumberLineModel, QuestionCategory, QuestQuestion } from "./questionBank";
 
-const q = (category: QuestionCategory, prompt: string, options: string[], answers: string[], explanation: string, hint: string, multiple = false, input = false): QuestQuestion => ({ category, prompt, options, answers, explanation, hint, multiple, input });
+const q = (category: QuestionCategory, prompt: string, options: string[], answers: string[], explanation: string, hint: string, multiple = false, input = false, numberLine?: NumberLineModel): QuestQuestion => ({ category, prompt, options, answers, explanation, hint, multiple, input, numberLine });
 
 // Five additional questions per lesson bring the regular pool from 13 to 18 questions.
 // They deliberately mix recognition, application, misconception repair, and written-number responses.

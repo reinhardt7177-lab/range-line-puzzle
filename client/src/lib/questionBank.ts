@@ -1,5 +1,7 @@
 // Icecream Math 5-2 Unit 1 question bank.
-// Every lesson has 8 items: concept, basic, application, misconception check, and challenge.
+import { extendedQuestions } from "./extendedQuestions";
+
+// Every lesson has a balanced bank of concept, basic, application, misconception, direct-input, and challenge items.
 
 export type QuestionCategory = "개념 확인" | "기본 연습" | "적용" | "오개념 교정" | "도전" | "직접 입력" | "보스전";
 
@@ -287,3 +289,5 @@ export const bossChallenges: Record<number, BossChallenge> = {
   10: { title: "문제 공방장", rewardTitle: "어림 문제 설계자", intro: "정보가 충분하고 방법이 분명한 문제를 골라 공방의 설계도를 완성하세요.", question: q("보스전", "다음 중 정답과 어림 방법이 하나로 정해지는 문제는 무엇일까요?", ["물건을 상자에 담으려 한다.", "257명을 어림하세요.", "127개 쿠키를 12개씩 모두 담으려면 상자는 몇 개 필요할까요?", "어림 문제를 만드세요."], ["127개 쿠키를 12개씩 모두 담으려면 상자는 몇 개 필요할까요?"], "전체 수, 한 상자에 담기는 수, 모두 담아야 한다는 목적이 있어 올림으로 답을 하나로 정할 수 있어요.", "필요한 수와 어떤 어림 방법을 쓸 이유가 모두 있는지 보세요.") },
   11: { title: "성의 최종 심판", rewardTitle: "경계의 성 수호자", intro: "범위와 어림하기 규칙을 모두 연결해 마지막 봉인을 해제하세요.", question: q("보스전", "공연 관객 367명을 한 줄에 50명씩 모두 앉히고, 관객 수는 백의 자리까지 어림해 안내하려 합니다. 필요한 줄 수와 안내 수의 짝으로 옳은 것은 무엇일까요?", ["7줄, 300명", "7줄, 400명", "8줄, 300명", "8줄, 400명"], ["8줄, 400명"], "367명을 모두 앉히려면 올림하여 8줄이 필요하고, 367을 백의 자리까지 반올림하면 400이에요.", "모두 앉히는 계산은 올림, 가까운 안내 수는 반올림으로 나누어 생각하세요.") }
 };
+
+quests.forEach((quest) => quest.questions.push(...extendedQuestions[quest.id]));

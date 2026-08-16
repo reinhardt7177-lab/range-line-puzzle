@@ -14,7 +14,7 @@
 
 ## 프로젝트 썸네일
 
-![초등학교 5학년 2학기 수학 1단원 수의 범위와 어림하기 — 경계의 성](assets/thumbnail/math-quest-unit1-thumbnail.png)
+![초등학교 5학년 2학기 수학 1단원 수의 범위와 어림하기 — 경계의 성](https://rangepuzz-opw6l8em.manus.space/manus-storage/math-quest-unit1-thumbnail_6019ead2.png)
 
 이 썸네일은 앱의 핵심 정보를 한 장에 담습니다. **초등학교 5학년 2학기 수학**, **1단원 수의 범위와 어림하기**, 그리고 퀘스트 세계관 **경계의 성**을 브루탈리즘 포스터 스타일로 표현했습니다.
 

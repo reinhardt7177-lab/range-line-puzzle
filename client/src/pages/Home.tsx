@@ -79,6 +79,16 @@ function InteractiveNumberLine({ model, value, onChange }: { model: NumberLineMo
   return <section className="number-line-builder" aria-label="수직선 직접 표현"><div className="number-line-builder__heading"><span>직접 표현</span><b>점 · 포함 여부 · 화살표를 완성하세요.</b></div><svg viewBox="0 0 540 112" role="img" aria-label="조작할 수 있는 수직선"><line x1="22" y1="48" x2="518" y2="48" className="number-line__axis" />{point !== undefined && <line x1={rangeStart} y1="48" x2={rangeEnd} y2="48" className="number-line-builder__range" />}{values.map((number) => <g key={number} className="number-line-builder__tick" onClick={() => setAnswer(number)} role="button" aria-label={`${number}에 점 찍기`}><line x1={x(number)} y1="36" x2={x(number)} y2="61" className="number-line__tick" /><circle cx={x(number)} cy="48" r={point === number ? 9 : 6} className={point === number ? (included ? "number-line__point number-line__point--closed" : "number-line__point") : "number-line-builder__target"} /><text x={x(number)} y="84" textAnchor="middle" className="number-line__label">{number}</text></g>)}{point !== undefined && <text x={direction === "right" ? 520 : 20} y="52" textAnchor={direction === "right" ? "start" : "end"} className="number-line-builder__arrow">{direction === "right" ? "→" : "←"}</text>}</svg><div className="number-line-builder__controls"><div><span>점의 모양</span><button type="button" className={included ? "is-active" : ""} onClick={() => setAnswer(point, true)}>● 포함</button><button type="button" className={!included ? "is-active" : ""} onClick={() => setAnswer(point, false)}>○ 제외</button></div><div><span>화살표</span><button type="button" className={direction === "left" ? "is-active" : ""} onClick={() => setAnswer(point, included, "left")}>← 작은 수</button><button type="button" className={direction === "right" ? "is-active" : ""} onClick={() => setAnswer(point, included, "right")}>큰 수 →</button></div></div></section>;
 }
 
+function ContextVisual({ questId }: { questId: number }) {
+  if (questId === 1) return <div className="context-visual context-visual--cards"><div><b>정확한 수</b><span>한 가지 값</span></div><div><b>수의 범위</b><span>여러 수 묶기</span></div><div><b>어림한 수</b><span>가까운 값</span></div></div>;
+  if (questId === 4) return <div className="context-visual context-visual--table"><div className="context-visual__row context-visual__row--head"><span>표현</span><span>점</span><span>방향</span></div><div className="context-visual__row"><span>이상·이하</span><span>● 포함</span><span>기준값 쪽</span></div><div className="context-visual__row"><span>초과·미만</span><span>○ 제외</span><span>큰 수·작은 수</span></div></div>;
+  if (questId === 7) return <div className="context-visual context-visual--place"><div className="context-visual__place-head"><span>천의 자리까지 반올림</span><b>바로 아래 자리 확인</b></div><div className="context-visual__place-grid"><span>천</span><span className="is-target">백</span><span>십</span><span>일</span><strong>3</strong><strong className="is-check">6</strong><strong>5</strong><strong>0</strong></div><p>목표 자리 <b>천</b> · 확인할 자리 <b>백 6</b> → 5 이상이면 올려요.</p></div>;
+  if ([5, 6].includes(questId)) return <div className="context-visual context-visual--steps"><span>상황의 목적</span><ArrowRight size={15} /><strong>{questId === 5 ? "부족하지 않게" : "완전한 묶음"}</strong><ArrowRight size={15} /><b>{questId === 5 ? "올림" : "버림"}</b></div>;
+  if (questId === 8) return <div className="context-visual context-visual--table"><div className="context-visual__row context-visual__row--head"><span>목적</span><span>방법</span><span>생각</span></div><div className="context-visual__row"><span>부족하면 안 됨</span><span>올림</span><span>하나 더</span></div><div className="context-visual__row"><span>완성 묶음</span><span>버림</span><span>남은 것 제외</span></div><div className="context-visual__row"><span>가장 가까움</span><span>반올림</span><span>5 이상 올림</span></div></div>;
+  if ([9, 10, 11].includes(questId)) return <div className="context-visual context-visual--check"><span>① 조건/수</span><ArrowRight size={15} /><span>② 기준/자리</span><ArrowRight size={15} /><strong>③ 목적에 맞는 답</strong></div>;
+  return null;
+}
+
 function QuestContextAid({ questId, hidden = false }: { questId: number; hidden?: boolean }) {
   if (hidden) return null;
   const aids: Record<number, { label: string; rule: string; note: string }> = {
@@ -95,19 +105,19 @@ function QuestContextAid({ questId, hidden = false }: { questId: number; hidden?
     11: { label: "종합 판정", rule: "경계값 + 목적", note: "범위는 끝값 포함 여부를, 어림은 왜 그 방법이 필요한지를 먼저 판단해요." }
   };
   const aid = aids[questId];
-  return <aside className="quest-context-aid" aria-label={`${aid.label} 학습 안내`}><span>{aid.label}</span><strong>{aid.rule}</strong><p>{aid.note}</p></aside>;
+  return <aside className="quest-context-aid" aria-label={`${aid.label} 학습 안내`}><div className="quest-context-aid__copy"><span>{aid.label}</span><strong>{aid.rule}</strong><p>{aid.note}</p></div><ContextVisual questId={questId} /></aside>;
 }
 
 export default function Home() {
   const [records, setRecords] = useState<Records>(() => emptyRecords());
   const [wrongNotes, setWrongNotes] = useState<WrongNote[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [screen, setScreen] = useState<Screen>(() => new URLSearchParams(window.location.search).get("screen") === "study" ? "study" : "map");
+  const [screen, setScreen] = useState<Screen>(() => { const requested = new URLSearchParams(window.location.search).get("screen"); return requested === "study" || requested === "play" ? requested : "map"; });
   const [activeQuestId, setActiveQuestId] = useState(() => { const value = Number(new URLSearchParams(window.location.search).get("quest")); return value >= 1 && value <= quests.length ? value : 1; });
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [noteFilter, setNoteFilter] = useState<NoteFilter>("all");
   const [reviewQueue, setReviewQueue] = useState<string[]>([]);
-  const [questionIndex, setQuestionIndex] = useState(0);
+  const [questionIndex, setQuestionIndex] = useState(() => { const value = Number(new URLSearchParams(window.location.search).get("q")); return Number.isInteger(value) && value >= 0 && value < 18 ? value : 0; });
   const [selected, setSelected] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [correct, setCorrect] = useState(false);

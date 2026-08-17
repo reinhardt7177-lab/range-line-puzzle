@@ -5,9 +5,9 @@ import { studyNotes } from "./studyNotes";
 const allQuestions = quests.flatMap((quest) => quest.questions);
 
 describe("unit 1 research-aligned question audit", () => {
-  it("keeps all 11 lessons populated with the audited 209-question practice bank", () => {
+  it("keeps all 11 lessons populated with the audited 210-question practice bank", () => {
     expect(quests).toHaveLength(11);
-    expect(allQuestions).toHaveLength(209);
+    expect(allQuestions).toHaveLength(210);
     quests.forEach((quest) => expect(quest.questions.length).toBeGreaterThanOrEqual(18));
   });
 

@@ -11,6 +11,15 @@ describe("visual learning aids", () => {
     });
   });
 
+  it("keeps rounding-line visuals mathematically consistent", () => {
+    const roundingQuestions = quests.flatMap((quest) => quest.questions).filter((question) => question.visual?.type === "rounding-builder");
+    expect(roundingQuestions).toHaveLength(1);
+    const visual = roundingQuestions[0].visual;
+    if (visual?.type !== "rounding-builder") return;
+    expect(visual.value - visual.lower).toBe(visual.upper - visual.value);
+    expect(roundingQuestions[0].answers.some((answer) => answer.replace(/,/g, "") === String(visual.rounded))).toBe(true);
+  });
+
   it("keeps rate tables multi-condition and number-line endpoints explicit", () => {
     const rateQuestions = quests.flatMap((quest) => quest.questions).filter((question) => question.visual?.type === "rate-table");
     expect(rateQuestions).toHaveLength(2);

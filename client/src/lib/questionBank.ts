@@ -18,7 +18,9 @@ export type NumberLineModel = {
 
 export type QuestionVisual =
   | { type: "rate-table"; title: string; rows: { range: string; size: string; fee: string }[] }
-  | { type: "bundle"; title: string; item: "상자" | "스탬프"; total: number; groupSize: number; completed: number; remainder: number; purpose: "all" | "complete" };
+  | { type: "bundle"; title: string; item: "상자" | "스탬프"; total: number; groupSize: number; completed: number; remainder: number; purpose: "all" | "complete" }
+  | { type: "rounding-line"; title: string; value: number; lower: number; upper: number; target: string; rounded: number }
+  | { type: "rounding-builder"; title: string; value: number; lower: number; upper: number; target: string; rounded: number };
 
 export type QuestQuestion = {
   category: QuestionCategory;
@@ -333,6 +335,9 @@ const visualPracticeQuestions: Partial<Record<number, QuestQuestion[]>> = {
   ],
   5: [
     q("적용", "그림의 상자 묶음을 보고, 남은 책까지 모두 담으려면 필요한 상자 수를 고르세요.", ["4개", "5개", "6개", "7개"], ["5개"], "4상자에는 48권만 담을 수 있고 5권이 남아요. 모든 책을 담으려면 상자 1개를 더 준비해 5개가 필요해요.", "남은 책이 하나라도 있으면 상자가 더 필요해요.", false, false, undefined, { type: "bundle", title: "도서 정리 상자", item: "상자", total: 53, groupSize: 12, completed: 4, remainder: 5, purpose: "all" }),
+  ],
+  7: [
+    q("개념 확인", "수직선을 보고 1,250을 백의 자리까지 반올림한 수를 고르세요.", [], ["1,300"], "1,250은 1,200과 1,300의 정확한 가운데예요. 반올림에서는 바로 아래 자리 숫자 5를 올리므로 1,300으로 나타내요.", "바로 아래 자리 숫자가 5이면 올려요.", false, false, undefined, { type: "rounding-builder", title: "가운데 경계에서 반올림", value: 1250, lower: 1200, upper: 1300, target: "1,300", rounded: 1300 }),
   ],
   6: [
     q("적용", "그림의 스탬프 묶음을 보고, 기념품으로 바꿀 수 있는 완성 묶음 수를 고르세요.", ["8개", "9개", "10개", "11개"], ["9개"], "스탬프 47장으로 5장씩 9묶음을 만들 수 있고 2장이 남아요. 남은 2장은 완성 묶음이 아니므로 기념품은 9개예요.", "완성된 묶음만 세고, 남은 스탬프는 따로 보세요.", false, false, undefined, { type: "bundle", title: "축제 스탬프 교환", item: "스탬프", total: 47, groupSize: 5, completed: 9, remainder: 2, purpose: "complete" }),

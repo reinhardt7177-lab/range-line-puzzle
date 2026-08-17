@@ -15,9 +15,12 @@ describe("unit 1 study notes", () => {
     expect(get(3).rules.join(" ")).toContain("기준값보다 작은 수");
     expect(get(4).rules.join(" ")).toContain("채워진 점");
     expect(get(4).rules.join(" ")).toContain("빈 점");
+    expect(get(4).rules.join(" ")).toContain("양끝 조건");
     expect(get(5).rules.join(" ")).toContain("부족하지 않게");
     expect(get(6).rules.join(" ")).toContain("완전히 만들 수 있는 수");
     expect(`${get(7).title} ${get(7).rules.join(" ")} ${get(7).oneLine}`).toContain("가장 가까운");
+    expect(get(7).rules.join(" ")).toContain("정확한 가운데");
+    expect(get(9).rules.join(" ")).toContain("첫째 조건 ○");
     expect(unitStudyNote.questId).toBe(11);
   });
 });

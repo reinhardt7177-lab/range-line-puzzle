@@ -16,6 +16,19 @@ describe("unit 1 research-aligned question audit", () => {
     expect(text).not.toMatch(/제자리멀리뛰기|오래달리기|타자 수|나이가|위의 조건|위의 \d급/);
   });
 
+  it("keeps every answer reachable through a visible control", () => {
+    allQuestions.forEach((question) => {
+      expect(question.answers.length).toBeGreaterThan(0);
+      if (question.input || question.interactiveNumberLine) return;
+      if (question.visual?.type === "rounding-builder") {
+        expect(question.options).toEqual([]);
+        expect(question.answers.every((answer) => [question.visual!.lower, question.visual!.upper].map((value) => value.toLocaleString("ko-KR")).includes(answer))).toBe(true);
+        return;
+      }
+      expect(question.answers.every((answer) => question.options.includes(answer))).toBe(true);
+    });
+  });
+
   it("keeps the key range and approximation rules present in the theory notes", () => {
     const joined = studyNotes.map((note) => `${note.oneLine} ${note.rules.join(" ")} ${note.mistake}`).join(" ");
     expect(joined).toContain("기준값을 포함");

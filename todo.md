@@ -139,4 +139,4 @@
 - [x] 이번 그림·표 보강분을 포함한 새 체크포인트를 저장한다.
 - [x] ContextVisual이 보이는 대표 문제 풀이 화면을 데스크톱 viewport에서도 확인한다.
 - [x] 자리값 표·ContextVisual·visualAudit 테스트를 포함한 최신 체크포인트를 저장한다.
-- [ ] 자리값 표·ContextVisual·visualAudit 테스트가 반영된 현재 상태로 새 체크포인트를 저장하고 저장 성공 버전 ID를 남긴다.
+- [x] 자리값 표·ContextVisual·visualAudit 테스트가 반영된 현재 상태로 새 체크포인트를 저장하고 저장 성공 버전 ID를 남긴다.

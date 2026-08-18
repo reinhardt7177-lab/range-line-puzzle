@@ -29,6 +29,18 @@ describe("visual learning aids", () => {
     });
     const numberLineQuestions = quests.flatMap((quest) => quest.questions).filter((question) => question.numberLine || question.interactiveNumberLine);
     expect(numberLineQuestions.length).toBeGreaterThanOrEqual(7);
-    numberLineQuestions.forEach((question) => expect(question.prompt).toMatch(/수직선|점|화살표/));
+    numberLineQuestions.forEach((question) => {
+      expect(question.prompt).toMatch(/수직선|점|화살표/);
+      const model = question.numberLine ?? question.interactiveNumberLine;
+      if (!model) return;
+      expect(model.start).toBeGreaterThanOrEqual(model.min);
+      expect(model.start).toBeLessThanOrEqual(model.max);
+      if (model.direction === "right") expect(model.start).toBeLessThan(model.max);
+      if (model.direction === "left") expect(model.start).toBeGreaterThan(model.min);
+      if (model.direction === "between") {
+        expect(model.end).toBeDefined();
+        expect(model.end).toBeGreaterThan(model.start);
+      }
+    });
   });
 });

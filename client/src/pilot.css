@@ -1,0 +1,9 @@
+.place-value-card,.parcel-card{padding:22px;border:1px solid #dbe4f3;border-radius:18px;background:#f6f8ff;margin:20px 0;}
+.place-value-card figcaption,.parcel-card figcaption{font-size:14px;color:#506890;font-weight:700;}
+.place-value-card>div{font-size:42px;letter-spacing:.08em;margin:20px 0;text-align:center;}
+.place-value-card mark{background:#ffe6a1;padding:5px;border-radius:8px;}
+.place-value-card p,.parcel-card p{font-size:14px;line-height:1.8;}
+.parcel-card svg{width:100%;max-height:250px;}.parcel-card svg text{font-size:18px;fill:#314565;}
+.curriculum-notice{font-size:12px;line-height:1.7;background:#fff7dc;color:#776234;padding:10px 22px;text-align:center;}
+.number-line-builder__target{fill:transparent!important;stroke:none!important;}
+.quest-app .number-line-builder .number-line__label{font-size:17px;}

@@ -1,0 +1,45 @@
+/* Original generated location art; learning diagrams remain deterministic. */
+.quest-art,.castle-art{display:block;width:100%;height:auto;object-fit:contain;}
+.adventure-hero{grid-template-columns:1fr 1.1fr;overflow:hidden;}
+.adventure-art .castle-art{max-width:520px;filter:drop-shadow(0 18px 18px #6d80b31a);}
+.adventure-gate__art{height:184px;margin:8px 0 0;transition:transform .3s ease;}
+.adventure-gate:hover:not(:disabled) .adventure-gate__art{transform:translateY(-5px) rotate(-1deg);}
+.adventure-gate:disabled .adventure-gate__art{filter:saturate(.35);opacity:.65;}
+.adventure-gate__body{margin:8px 0 16px;}.adventure-gate__body>span{min-width:0;}
+.adventure-finish .quest-art{max-width:250px;height:185px;}
+.brief-visual{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px 18px;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#fff8e9 0%,#eef1ff 68%);}
+.brief-visual--mint{background:radial-gradient(ellipse at 50% 42%,#fffcec,#e6f5ef 72%);}
+.brief-visual--purple{background:radial-gradient(ellipse at 50% 42%,#fff4e8,#eeebfa 72%);}
+.brief-visual--orange{background:radial-gradient(ellipse at 50% 42%,#fffbee,#fff0e4 72%);}
+.brief-visual::before,.brief-visual::after{display:none;}
+.brief-scene-heading{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 12px;color:#7888aa;font-size:12px;}
+.brief-scene-heading span{letter-spacing:.14em;font-weight:800;}.brief-scene-heading b{padding:7px 12px;background:#ffffffb3;border-radius:20px;}
+.brief-scene{max-width:590px;flex:1;min-height:0;max-height:390px;margin:12px 0;filter:drop-shadow(0 15px 15px #667b9a1a);}
+.brief-scene-caption{margin:0;text-align:center;font-size:18px;font-weight:750;color:#445b7d;}
+.brief-scene-caption span{display:block;margin-top:8px;font-size:12px;font-weight:400;color:#8290aa;}
+.rail-scene{width:calc(100% + 24px);max-width:none;margin:-8px -12px 10px;}
+.boss-scene{max-height:260px;margin:-16px auto 8px;}
+.reward-scene{max-width:310px;max-height:220px;margin:0 auto 12px;}
+.boss-clear-card__burst{display:none;}.prep-scene{float:right;width:210px;margin:-15px -10px 0 10px;}
+.study-hero-scene{width:300px;max-width:40%;flex-shrink:0;}
+.achievement-hero__badge::before,.achievement-hero__badge::after{display:none;}
+.achievement-hero__badge{width:340px;max-width:100%;height:auto;justify-self:center;}
+.achievement-hero__badge .quest-art{display:block;width:100%;height:auto;object-fit:contain;filter:none;transform:none;position:static;}
+.achievement-card__seal{width:130px;height:92px;border:0;background:none;box-shadow:none;}
+.achievement-card__seal .quest-art{width:130px;height:92px;max-width:none;}
+.achievement-card--locked .quest-art{filter:saturate(.3);opacity:.65;}
+.achievement-summary>span,.achievement-hero__badge>span,.achievement-card__empty{border:0;border-radius:12px;box-shadow:none;transform:none;background:#ffffffb3;padding:9px 12px;font-size:12px;}
+.achievement-card__title h2{font-size:19px;}.achievement-card__title p{font-size:13px;line-height:1.7;}.achievement-card__title>span{font-size:11px;}
+.achievement-card--locked{background:#eff1f6;}
+.unlock-gate>.quest-art{width:130px;height:90px;max-width:none;}
+.unlock-gate--final{background:transparent;border:0;box-shadow:none;}
+.final-ending__content>.castle-art{width:min(480px,90%);margin:10px auto 20px;}
+.final-ending__content{position:relative;}.final-ending{padding-top:35px;}
+@media(max-width:700px){
+ .adventure-hero{grid-template-columns:1fr;}.adventure-art .castle-art{max-width:340px;}.adventure-art{margin-top:8px;}
+ .adventure-gate__art{height:190px;}.brief-visual{min-height:300px;padding:20px 12px;}.brief-scene{height:230px;max-height:260px;margin:0;}.brief-scene-caption{font-size:16px;}
+ .boss-scene{height:190px;}.prep-scene{float:none;width:230px;margin:0 auto 12px;}.boss-prep-card h1{padding-right:0;}
+ .study-hero-scene{width:200px;max-width:100%;margin:auto;}.achievement-hero__badge{max-width:100%;width:250px;margin:auto;}
+ .achievement-card__seal,.achievement-card__seal .quest-art{width:100px;height:75px;}.unlock-gate>.quest-art{width:90px;height:70px;}
+}
+@media(prefers-reduced-motion:reduce){.adventure-gate__art{transition:none!important;transform:none!important;}}

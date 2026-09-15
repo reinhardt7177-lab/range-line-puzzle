@@ -1,5 +1,6 @@
 // Icecream Math 5-2 Unit 1 question bank.
 import { extendedQuestions } from "./extendedQuestions";
+import { applyPilot } from "./curriculumPilot";
 
 // Every lesson has a balanced bank of concept, basic, application, misconception, direct-input, and challenge items.
 
@@ -17,6 +18,8 @@ export type NumberLineModel = {
 };
 
 export type QuestionVisual =
+  | { type: "place-value"; value: string; place: string; kept: string; tail: string }
+  | { type: "parcel"; weight: number; dimensions: [number, number, number] }
   | { type: "rate-table"; title: string; rows: { range: string; size: string; fee: string }[] }
   | { type: "bundle"; title: string; item: "상자" | "스탬프"; total: number; groupSize: number; completed: number; remainder: number; purpose: "all" | "complete" }
   | { type: "rounding-line"; title: string; value: number; lower: number; upper: number; target: string; rounded: number }
@@ -207,13 +210,13 @@ const deepQuestions: Record<number, QuestQuestion[]> = {
   ],
   2: [
     q("적용", "‘10 이상 20 이하’인 수를 모두 고르세요.", ["9", "10", "15", "20", "21"], ["10", "15", "20"], "이상과 이하는 양쪽 기준값을 모두 포함하므로 10, 15, 20을 골라요.", "기준값 10과 20을 빼먹지 않았는지 확인하세요.", true),
-    q("기본 연습", "수직선에서 70에 채워진 점을 찍고 오른쪽으로 칠한 것은 어떤 뜻일까요?", ["70 이상", "70 초과", "70 이하", "70 미만"], ["70 이상"], "채워진 점은 기준값을 포함하고 오른쪽은 큰 수 쪽이므로 70 이상이에요.", "채워진 점은 포함, 오른쪽은 큰 수를 뜻해요."),
+    q("기본 연습", "아래 수직선이 나타내는 수의 범위는 무엇일까요?", ["70 이상", "70 초과", "70 이하", "70 미만"], ["70 이상"], "채워진 점은 기준값을 포함하고 오른쪽은 큰 수 쪽이므로 70 이상이에요.", "채워진 점은 포함, 오른쪽은 큰 수를 뜻해요.", false, false, { min: 40, max: 100, step: 10, start: 70, startIncluded: true, direction: "right" }),
     q("오개념 교정", "‘25 이하’에는 25가 들어가지 않는다고 한 친구가 있습니다. 가장 알맞은 설명은 무엇일까요?", ["이하는 ‘같거나 작은’ 뜻이므로 25도 들어간다", "이하는 큰 수만 뜻한다", "25는 홀수라서 들어간다", "25는 반올림해야 들어간다"], ["이하는 ‘같거나 작은’ 뜻이므로 25도 들어간다"], "이하는 기준값과 같은 수를 포함해요.", "‘이하’를 말로 풀어 읽어 보세요."),
     q("도전", "행사 스탬프가 60개 이상 80개 이하인 쿠폰을 모두 고르세요.", ["59개", "60개", "73개", "80개", "81개"], ["60개", "73개", "80개"], "60 이상 80 이하는 60과 80을 포함한 사이의 수예요.", "두 경계값을 모두 포함하는지 먼저 확인하세요.", true)
   ],
   3: [
     q("적용", "‘10 초과 20 미만’인 수를 모두 고르세요.", ["10", "11", "16", "19", "20"], ["11", "16", "19"], "초과와 미만은 기준값을 포함하지 않으므로 10과 20은 제외해요.", "양쪽 경계값에 빈 점이 있다고 생각해 보세요.", true),
-    q("기본 연습", "수직선에서 45에 빈 점을 찍고 왼쪽으로 칠한 것은 어떤 뜻일까요?", ["45 미만", "45 이하", "45 이상", "45 초과"], ["45 미만"], "빈 점은 기준값 제외, 왼쪽은 작은 수 쪽이므로 45 미만이에요.", "빈 점과 왼쪽 방향을 각각 해석하세요."),
+    q("기본 연습", "아래 수직선이 나타내는 수의 범위는 무엇일까요?", ["45 미만", "45 이하", "45 이상", "45 초과"], ["45 미만"], "빈 점은 기준값 제외, 왼쪽은 작은 수 쪽이므로 45 미만이에요.", "빈 점과 왼쪽 방향을 각각 해석하세요.", false, false, { min: 30, max: 60, step: 5, start: 45, startIncluded: false, direction: "left" }),
     q("오개념 교정", "‘12 초과’인 관문 번호를 찾을 때 12를 선택한 친구에게 알맞은 설명은 무엇일까요?", ["초과는 기준값보다 큰 수라서 12는 제외된다", "12는 짝수라서 제외된다", "초과는 기준값을 포함한다", "12는 항상 선택한다"], ["초과는 기준값보다 큰 수라서 12는 제외된다"], "초과는 ‘보다 크다’이므로 기준값과 같은 수는 포함하지 않아요.", "‘같거나 큰’과 ‘보다 큰’의 차이를 생각하세요."),
     q("도전", "게임 참가권 번호가 ‘9 초과 13 미만’입니다. 9번, 10번, 12번, 13번 중 사용할 수 있는 번호를 모두 고르세요.", ["9번", "10번", "12번", "13번"], ["10번", "12번"], "9 초과이고 13 미만이어야 하므로 10번과 12번만 가능해요.", "두 끝값은 모두 제외되는지 확인하세요.", true)
   ],
@@ -323,7 +326,7 @@ const numberLineQuestions: Partial<Record<number, QuestQuestion[]>> = {
   ],
   4: [
     q("개념 확인", "그림의 수직선으로 나타낸 수의 범위는 무엇일까요?", ["10 이상 25 이하", "10 초과 25 미만", "10 이상 25 미만", "10 미만 25 이상"], ["10 이상 25 미만"], "10은 채워진 점이라 포함하고, 25는 빈 점이라 포함하지 않으므로 10 이상 25 미만이에요.", "왼쪽 끝점과 오른쪽 끝점의 채움 상태를 따로 보세요.", false, false, { min: 0, max: 30, step: 5, start: 10, end: 25, startIncluded: true, endIncluded: false, direction: "between" }),
-    q("도전", "그림의 수직선에 들어가는 자연수를 모두 고르세요.", ["12", "15", "20", "21", "25"], ["15", "20"], "15의 빈 점은 제외하고 20의 채워진 점은 포함하므로 15 초과 20 이하예요.", "왼쪽은 빈 점, 오른쪽은 채워진 점이에요.", true, false, { min: 10, max: 25, step: 5, start: 15, end: 20, startIncluded: false, endIncluded: true, direction: "between" })
+    q("도전", "그림의 수직선에 들어가는 자연수를 모두 고르세요.", ["12", "15", "20", "21", "25"], ["20"], "15의 빈 점은 제외하고 20의 채워진 점은 포함하므로 15 초과 20 이하예요.", "왼쪽은 빈 점, 오른쪽은 채워진 점이에요.", true, false, { min: 10, max: 25, step: 5, start: 15, end: 20, startIncluded: false, endIncluded: true, direction: "between" })
   ]
 };
 
@@ -349,3 +352,4 @@ const visualPracticeQuestions: Partial<Record<number, QuestQuestion[]>> = {
 };
 
 quests.forEach((quest) => quest.questions.push(...(visualPracticeQuestions[quest.id] ?? [])));
+applyPilot(quests, bossChallenges);

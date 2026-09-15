@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import pageSource from "./Home.tsx?raw";
 
 describe("문제 집중형 UI", () => {
-  it("30초 진단은 대형 히어로 대신 질문·선택지·제출 순서를 사용한다", () => {
+  it("시작 전 한 문제은 대형 히어로 대신 질문·선택지·제출 순서를 사용한다", () => {
     expect(pageSource).toContain('className="diagnostic-card__top"');
-    expect(pageSource).toContain("관문 {String(quest.id).padStart(2, \"0\")} · 30초 진단");
-    expect(pageSource).toContain('<div className="diagnostic-question"><span>빠른 진단</span><h1>{item.prompt}</h1>');
-    expect(pageSource).toContain("진단 확인");
+    expect(pageSource).toContain("관문 {String(quest.id).padStart(2, \"0\")} · 시작 전 한 문제");
+    expect(pageSource).toContain('<div className="diagnostic-question"><span>가볍게 생각해 봐요</span>');
+    expect(pageSource).toContain("답과 설명 보기");
     expect(pageSource).not.toContain("준비됐나요?");
     expect(pageSource).not.toContain("diagnostic-card__seal");
   });
@@ -21,7 +21,7 @@ describe("문제 집중형 UI", () => {
 
   it("진단 후 피드백은 제출 뒤에만 열리고 다음 행동이 하나로 유지된다", () => {
     expect(pageSource).toContain('{submitted && <div className={correct ? "quest-feedback quest-feedback--success"');
-    expect(pageSource).toContain('{!submitted ? <button type="button" className="answer-action" disabled={!selected} onClick={onSubmit}>진단 확인');
-    expect(pageSource).toContain('<button type="button" className="next-quest" onClick={onStart}>본 학습 시작');
+    expect(pageSource).toContain('{!submitted ? <button type="button" className="answer-action" disabled={!selected} onClick={onSubmit}>답과 설명 보기');
+    expect(pageSource).toContain('<button type="button" className="next-quest" onClick={onStart}>이제 문제 풀러 가기');
   });
 });

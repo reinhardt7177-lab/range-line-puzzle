@@ -1,0 +1,6 @@
+.diagnostic-intro{font-size:14px;line-height:1.8;color:#687c99;margin:14px 0 22px;max-width:58ch;word-break:keep-all;}
+.diagnostic-question>span{display:inline-block;border:0;border-radius:10px;padding:7px 12px;background:#e0eafa;color:#506b9a;box-shadow:none;font-size:12px;}
+.diagnostic-question h1{font-size:clamp(23px,3vw,32px);line-height:1.65;word-break:keep-all;}
+.diagnostic-question .quest-options{grid-template-columns:1fr;}
+.diagnostic-card .quest-feedback p{font-size:16px;line-height:1.9;word-break:keep-all;}
+.diagnostic-card .quest-feedback strong{line-height:1.7;}

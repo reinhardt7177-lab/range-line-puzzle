@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import ReviewToolbar from "./components/ReviewToolbar";
 
 // Design reminder: 숫자 아케이드 관제실 — Range Cobalt, paper-white panels,
 // asymmetric mission rail, direct manipulation, short arcade feedback.
@@ -13,6 +14,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <ReviewToolbar />
           <Home />
         </TooltipProvider>
       </ThemeProvider>

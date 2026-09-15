@@ -1,0 +1,11 @@
+.review-toolbar { margin: 16px auto; width: min(1320px, calc(100% - 32px)); padding: 18px 20px; background: #fff; color: #17243a; border: 1px solid #cbd5e1; border-radius: 12px; font-family: system-ui, sans-serif; }
+.review-toolbar__heading { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; margin-bottom: 14px; }
+.review-toolbar__heading strong { font-size: 16px; }
+.review-toolbar__heading span { font-size: 13px; color: #526078; }
+.review-toolbar__heading a { margin-left: auto; font-size: 13px; text-decoration: underline; }
+.review-toolbar form { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+.review-toolbar label { display: grid; gap: 5px; font-size: 12px; font-weight: 600; }
+.review-toolbar select { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 9px 12px; min-height: 44px; max-width: 100%; font-size: 14px; }
+.review-toolbar button { background: #234ee8; color: white; border-radius: 6px; padding: 10px 18px; min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.review-entry { display: block; width: fit-content; margin: 12px auto; padding: 10px 16px; background: white; border: 1px solid #cbd5e1; border-radius: 6px; font: 13px system-ui, sans-serif; color: #234ee8; }
+@media (max-width: 600px) { .review-toolbar label { flex: 1 1 140px; min-width: 0; } .review-toolbar form button { width: 100%; } .review-toolbar__heading span { order: 3; width: 100%; } }

@@ -2,9 +2,28 @@ import { describe, expect, it } from "vitest";
 import { quests } from "./questionBank";
 
 describe("visual learning aids", () => {
+  it("provides a drawing whenever a question asks learners to read a number line", () => {
+    quests.flatMap((quest) => quest.questions).filter((question) => /수직선/.test(question.prompt)).forEach((question) => {
+      expect(Boolean(question.numberLine || question.interactiveNumberLine || question.visual?.type === "rounding-builder" || question.visual?.type === "rounding-line"), question.prompt).toBe(true);
+    });
+  });
+
+  it("matches numerical choices to open and closed interval endpoints", () => {
+    quests.flatMap((quest) => quest.questions).forEach((question) => {
+      const m = question.numberLine;
+      if (!m || !question.options.every((option) => /^\d+$/.test(option))) return;
+      const includes = (n: number) => {
+        if (m.direction === "left") return m.startIncluded ? n <= m.start : n < m.start;
+        const above = m.startIncluded ? n >= m.start : n > m.start;
+        if (m.direction === "right") return above;
+        return above && (m.endIncluded ? n <= m.end! : n < m.end!);
+      };
+      expect(question.answers.slice().sort()).toEqual(question.options.filter((option) => includes(Number(option))).sort());
+    });
+  });
   it("keeps bundle drawings consistent with totals", () => {
     const visualQuestions = quests.flatMap((quest) => quest.questions).filter((question) => question.visual?.type === "bundle");
-    expect(visualQuestions).toHaveLength(2);
+    expect(visualQuestions).toHaveLength(1);
     visualQuestions.forEach((question) => {
       if (question.visual?.type !== "bundle") return;
       expect(question.visual.completed * question.visual.groupSize + question.visual.remainder).toBe(question.visual.total);
@@ -22,7 +41,7 @@ describe("visual learning aids", () => {
 
   it("keeps rate tables multi-condition and number-line endpoints explicit", () => {
     const rateQuestions = quests.flatMap((quest) => quest.questions).filter((question) => question.visual?.type === "rate-table");
-    expect(rateQuestions).toHaveLength(2);
+    expect(rateQuestions).toHaveLength(5);
     rateQuestions.forEach((question) => {
       if (question.visual?.type !== "rate-table") return;
       expect(question.visual.rows.every((row) => row.range && row.size && row.fee)).toBe(true);

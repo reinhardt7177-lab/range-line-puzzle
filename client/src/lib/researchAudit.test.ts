@@ -5,10 +5,10 @@ import { studyNotes } from "./studyNotes";
 const allQuestions = quests.flatMap((quest) => quest.questions);
 
 describe("unit 1 research-aligned question audit", () => {
-  it("keeps all 11 lessons populated with the audited 210-question practice bank", () => {
+  it("keeps 11 lessons with the 3/5/9 textbook pilot and unchanged remaining lessons", () => {
     expect(quests).toHaveLength(11);
-    expect(allQuestions).toHaveLength(210);
-    quests.forEach((quest) => expect(quest.questions.length).toBeGreaterThanOrEqual(18));
+    expect(allQuestions).toHaveLength(175);
+    expect(quests.map(quest => quest.questions.length)).toEqual([18,20,8,21,10,19,19,18,6,18,18]);
   });
 
   it("keeps questions independent and avoids personal performance or age judgments", () => {

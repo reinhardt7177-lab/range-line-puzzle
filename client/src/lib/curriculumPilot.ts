@@ -1,5 +1,5 @@
 import type { Quest, QuestQuestion, QuestionVisual, BossChallenge } from "./questionBank";
-const make = (prompt: string, options: string[], answer: string, explanation: string, extra: Partial<QuestQuestion> = {}): QuestQuestion => ({ category: "기본 연습", prompt, options, answers: [answer], explanation, hint: "그림의 기준과 문제에서 구하려는 것을 차례로 확인해 보세요.", ...extra });
+const make = (prompt: string, options: string[], answer: string, explanation: string, extra: Partial<QuestQuestion> = {}): QuestQuestion => ({ category: "기본 연습", prompt, options, answers: [answer], explanation, hint: "문제의 기준과 구하려는 것을 차례로 확인해 보세요.", ...extra });
 export const parcelTable: QuestionVisual = { type: "rate-table", title: "이 문제에서 사용하는 택배 요금표", rows: [
 {range:"2kg 이하",size:"60cm 이하",fee:"6,000원"},
 {range:"2kg 초과 10kg 이하",size:"60cm 초과 120cm 이하",fee:"7,000원"},
@@ -7,7 +7,7 @@ export const parcelTable: QuestionVisual = { type: "rate-table", title: "이 문
 {range:"20kg 초과 30kg 이하",size:"140cm 초과 160cm 이하",fee:"9,000원"}] };
 export function parcelFee(weight: number, size: number) {
  const w = [2,10,20,30].findIndex(n=>weight<=n), s = [60,120,140,160].findIndex(n=>size<=n);
- if (weight<=0 || size<=0 || w<0 || s<0) throw new Error("요금표 범위 밖");
+ if (!Number.isFinite(weight) || !Number.isFinite(size) || weight<=0 || size<=0 || w<0 || s<0) throw new Error("요금표 범위 밖");
  return 6000 + Math.max(w,s)*1000;
 }
 export const pilotQuestions: Record<number, QuestQuestion[]> = {
@@ -25,10 +25,10 @@ export const pilotQuestions: Record<number, QuestQuestion[]> = {
  make("쿠키가 243개 필요해요. 10개들이 상자로만 산다면 쿠키를 최소 몇 개 사야 할까요?",["240개","250개","243개"],"250개","240개로는 3개가 부족해요. 다음 10개 묶음까지 준비하면 250개예요.",{category:"개념 확인",visual:{type:"place-value",value:"243",place:"십의 자리",kept:"24",tail:"3"}}),
  make("243을 올림하여 백의 자리까지 나타내세요.",[],"300","백의 자리 아래 부분 43을 100으로 생각해 300으로 나타내요.",{input:true,visual:{type:"place-value",value:"243",place:"백의 자리",kept:"2",tail:"43"}}),
  make("쿠키 243개를 준비하려고 10개들이 상자를 사요. 250개를 사려면 상자는 몇 개일까요?",[],"25","어림한 쿠키 수는 250개이고, 250÷10=25이므로 상자는 25개예요.",{input:true,category:"적용"}),
- make("쿠키 243개를 100개들이 상자로만 사면 최소 몇 상자가 필요할까요?",["2상자","3상자","300상자"],"3상자","쿠키를 300개 사야 하므로 100개들이 상자는 3개예요. 쿠키 수와 상자 수의 단위를 구분해요.",{category:"적용"}),
+ make("쿠키가 243개 이상 필요해요. 100개들이 상자로만 산다면 최소 몇 상자를 사야 할까요?",["2상자","3상자","300상자"],"3상자","쿠키를 최소 300개 사야 하므로 100개들이 상자는 3개예요. 쿠키 수와 상자 수의 단위를 구분해요.",{category:"적용"}),
  make("523을 올림하여 십의 자리까지 나타내세요.",[],"530","십의 자리 아래 3이 남으므로 520이 아니라 530으로 나타내요.",{input:true,visual:{type:"place-value",value:"523",place:"십의 자리",kept:"52",tail:"3"}}),
  make("9.162를 올림하여 소수 첫째 자리까지 나타내세요.",[],"9.2","소수 첫째 자리 아래 0.062가 남아요. 9.1보다 한 단계 큰 9.2로 나타내요.",{input:true,visual:{type:"place-value",value:"9.162",place:"소수 첫째 자리",kept:"9.1",tail:"62"}}),
- make("9.162를 올림하여 소수 둘째 자리까지 나타내세요.",[],"9.17","9.16 아래에 0.002가 남아 있으므로 9.17로 나타내요.",{input:true}),
+ make("9.162를 올림하여 소수 둘째 자리까지 나타내세요.",[],"9.17","9.16에서 0.002만큼 더 남아 있으므로 소수 둘째 자리까지 올림하면 9.17이에요.",{input:true}),
  make("250을 올림하여 십의 자리까지 나타내면?",["250","260"],"250","일의 자리가 이미 0이므로 그대로 250이에요. 올림한다고 항상 커지는 것은 아니에요.",{category:"오개념 교정"}),
  make("4.01을 올림하여 일의 자리까지 나타내면?",["4","5"],"5","바로 아래 숫자 0만 보면 안 돼요. 아래 부분 전체 0.01이 남아 있으므로 5예요.",{category:"오개념 교정",visual:{type:"place-value",value:"4.01",place:"일의 자리",kept:"4",tail:".01"}}),
  make("21,500원짜리 책을 1,000원짜리 지폐로만 계산해요. 최소 몇 장을 내야 할까요?",[],"22","먼저 21,500원을 천의 자리까지 올림하면 22,000원이에요. 1,000원짜리 지폐는 22장이 필요해요.",{input:true,category:"도전"})

@@ -1,0 +1,281 @@
+@font-face {
+  font-family: "Paperlogy";
+  src: url("/fonts/paperlogy/Paperlogy-4Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Paperlogy";
+  src: url("/fonts/paperlogy/Paperlogy-6SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Paperlogy";
+  src: url("/fonts/paperlogy/Paperlogy-7Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --font-body: "Paperlogy", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  --lesson-text: #293c59;
+  --lesson-muted: #756d60;
+  --lesson-inline: .75rem;
+  --lesson-stack: 1.5rem;
+  --lesson-section: 2rem;
+  --lesson-page: clamp(1.125rem, 2.5vw, 2rem);
+}
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body, .quest-app, .review-toolbar { font-family: var(--font-body); }
+.quest-app :is(small,span,p,strong,b,button,input,h1,h2,h3,em,label,legend,figcaption,td,th,div,text,select,textarea), .review-toolbar * { font-family: var(--font-body); }
+.quest-app :is(h1,h2,h3,b,strong) { font-weight: 700; }
+.quest-app :is(h1,h2,h3) { letter-spacing: -.02em; text-wrap: balance; }
+.quest-app p { text-wrap: pretty; }
+.quest-app :is(input,select,textarea) { font-size: 1rem; }
+.quest-app :is(.sheet-status,.rail-time,.rail-record,.previous-record,.atlas-title,.rate-table-scroll) { font-variant-numeric: tabular-nums; }
+.quest-app .quest-brand small { font-weight: 700; letter-spacing: -.02em; }
+.quest-app .quest-brand strong { font-weight: 400; }
+.quest-app .atlas-pin b { font-weight: 700; }
+.quest-app .atlas-pin span { font-weight: 600; }
+
+/* One open book, shared edges. The illustration does not need its own card. */
+.quest-app .lesson-intro {
+  width: calc(100% - 3rem);
+  max-width: 1200px;
+  margin: 1.75rem auto 2.5rem;
+  padding: 1.25rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(0,1.05fr);
+  column-gap: 3rem;
+  row-gap: 1rem;
+  align-items: center;
+  border: 1px solid #c9ad77;
+  border-radius: 10px 18px 12px 7px;
+  background: linear-gradient(90deg,#fffaf0 46%,#e8deca 49.9%,#fffcf5 50.3%,#fffaf0 54%);
+  box-shadow: 0 4px #e1d2b4,0 6px #b89a63,0 12px 28px #59482a0d;
+}
+.intro-topline { grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; gap:1rem; color:var(--lesson-muted); font-size:.8125rem; }
+.quest-app .intro-topline .back-link { min-height:44px; margin:0; padding:0; }
+.quest-app .lesson-intro .intro-scene {
+  min-width:0; min-height:0; margin:0; padding:0;
+  border:0; border-radius:0; background:none; box-shadow:none;
+  display:block; overflow:visible;
+}
+.quest-app .intro-scene .brief-scene {
+  width:100%; max-width:none; height:auto; max-height:380px; margin:0;
+  object-fit:contain; mix-blend-mode:multiply; border-radius:0; filter:none;
+}
+.intro-scene figcaption { margin-block-start:.75rem; font-size:.875rem; line-height:1.5; color:#8a744d; text-align:center; }
+.quest-app .lesson-intro .intro-copy { min-width:0; padding:0; margin:0; border:0; border-radius:0; background:none; box-shadow:none; }
+.intro-heading p { color:var(--lesson-muted); font-size:.8125rem; margin:0 0 .5rem; line-height:1.5; }
+.quest-app .intro-heading h1 { color:var(--lesson-text); font-size:clamp(1.75rem,3.2vw,2.5rem); line-height:1.25; margin:0; font-weight:700; }
+.intro-theory { font-size:1.0625rem; line-height:1.75; color:#4b5260; max-width:34ch; margin:1.25rem 0 0; word-break:keep-all; }
+.intro-example { margin-block-start:var(--lesson-stack); }
+.intro-example>span { font-size:.8125rem; font-weight:600; color:#94703e; }
+.intro-example p { font-size:1rem; line-height:1.75; margin:.5rem 0 0; color:#526076; max-width:38ch; word-break:keep-all; }
+.intro-start { margin-block-start:var(--lesson-section); }
+.quest-app .intro-start .start-quest { width:100%; min-height:52px; margin:0; font-size:1rem; font-weight:600; }
+.intro-start p { font-size:.8125rem; color:var(--lesson-muted); line-height:1.6; margin:.75rem 0 0; text-align:center; }
+.quest-app .intro-copy .previous-record { padding:12px; margin-block-start:24px; }
+
+/* First question: context, question, choices, action. No decorative preamble. */
+.quest-app .lesson-diagnostic { padding:1.75rem var(--lesson-page) 2.5rem; }
+.quest-app .lesson-diagnostic .diagnostic-card { width:min(820px,100%); padding:1.5rem 2rem 1.75rem; }
+.quest-app .lesson-diagnostic .diagnostic-card__top { gap:1rem; align-items:center; }
+.quest-app .lesson-diagnostic .diagnostic-card__status { background:none; padding:0; border:0; font-size:.8125rem; line-height:1.6; color:var(--lesson-muted); font-weight:600; }
+.quest-app .lesson-diagnostic .diagnostic-card__skip { font-size:.8125rem; color:#536782; min-height:44px; text-decoration:underline; text-underline-offset:4px; }
+.quest-app .lesson-diagnostic .diagnostic-question { margin:1.5rem 0 0; padding:0; }
+.quest-app .question-situation { font-size:1rem; color:#73786e; margin:0 0 .75rem; line-height:1.6; }
+.quest-app .lesson-diagnostic .diagnostic-question h1 { font-size:clamp(1.5rem,2.5vw,2rem); line-height:1.45; margin:0; max-width:38ch; font-weight:700; }
+.quest-app .lesson-diagnostic .quest-options { margin-block-start:1.5rem; gap:.75rem; }
+.quest-app .lesson-diagnostic .quest-option { min-height:64px; padding:15px 18px; }
+.quest-app .lesson-diagnostic .quest-option--selected { padding:14px 17px; }
+.quest-app .lesson-diagnostic .quest-option strong { font-size:1rem; font-weight:600; line-height:1.6; }
+.quest-app .lesson-diagnostic .diagnostic-intro { font-size:.8125rem; line-height:1.6; color:var(--lesson-muted); margin:1rem 0 0; }
+.quest-app .lesson-diagnostic .diagnostic-actions { border:0; margin-block-start:1.5rem; padding:0; }
+.quest-app .lesson-diagnostic .diagnostic-actions button { width:100%; min-height:50px; font-size:.9375rem; font-weight:600; }
+.quest-app .lesson-diagnostic .quest-feedback { margin-block-start:1.5rem; }
+
+/* Exercise sheet: remove nested paper boxes and preserve one reading axis. */
+.quest-app .play-layout { max-width:1280px; grid-template-columns:176px minmax(0,1fr); column-gap:1.5rem; padding-inline:var(--lesson-page); }
+.quest-app .play-rail { padding:20px 16px; align-self:start; }
+.quest-app .play-rail h1 { font-size:1.375rem; line-height:1.4; }
+.quest-app .play-rail h1 em { display:none; }
+.quest-app .rail-steps { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; padding:0; }
+.quest-app .rail-step { padding:0; min-width:0; display:grid; place-items:center; }
+.quest-app .rail-step span { width:24px; height:28px; font-size:.75rem; border-radius:4px; }
+.quest-app .rail-step b { display:none; }
+.quest-app .rail-record { margin-block-start:1.5rem; padding:12px 0 0; }
+.quest-app .lesson-practice { padding:1.5rem 0 2.5rem; }
+.quest-app .lesson-practice .question-sheet { padding:1.75rem 2rem; width:100%; max-width:none; }
+.quest-app .lesson-practice .question-sheet::before { display:none; }
+.quest-app .lesson-practice .sheet-header { margin:0 0 1.25rem; padding:0; }
+.quest-app .lesson-practice .sheet-status { font-size:.8125rem; font-weight:400; }
+.quest-app .lesson-practice .quest-tag { background:none; padding:0; color:#866c41; font-size:.8125rem; font-weight:600; }
+.quest-app .lesson-question { font-size:clamp(1.5rem,2.4vw,1.875rem); font-weight:700; line-height:1.55; color:var(--lesson-text); margin:0 0 1.5rem; max-width:42ch; }
+.quest-app .lesson-practice :is(.number-line-builder,.number-line,.number-line-visual) { background:none; border:0; box-shadow:none; border-radius:0; margin:1.5rem 0; padding:0; }
+.quest-app .lesson-practice .number-line-builder__heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0; }
+.quest-app .lesson-practice .number-line-builder__heading span { background:none; padding:0; color:#756c5c; font-size:.8125rem; font-weight:600; }
+.quest-app .lesson-practice .number-line-builder__heading b { font-size:.8125rem; font-weight:400; color:#8a8172; }
+.quest-app .lesson-practice .line-instruction { font-size:.875rem; line-height:1.6; margin:.5rem 0 .75rem; }
+.quest-app .number-line-builder .number-line-scroll { min-width:0; padding-block:4px; }
+.quest-app .number-line-builder .number-line-scroll svg { height:125px; max-height:125px; }
+.quest-app .number-line-builder .number-line__label { font-size:18px; font-weight:600; }
+.quest-app .number-line-builder__controls { margin-block-start:1rem; gap:1.5rem; }
+.quest-app .number-line-builder__controls legend { font-size:.8125rem; margin-block-end:.5rem; }
+.quest-app .number-line-builder__controls fieldset { gap:.75rem; }
+.quest-app .number-line-builder__controls button { font-size:.9375rem; font-weight:600; min-height:46px; }
+.quest-app .lesson-practice .quest-options { margin-block-start:1.5rem; }
+.quest-app .lesson-practice .quest-option strong { font-size:1rem; font-weight:600; line-height:1.6; }
+.quest-app .lesson-practice .sheet-actions { margin-block-start:1.5rem; padding:0; border:0; }
+.quest-app .lesson-practice .hint-action { background:none; border:0; box-shadow:none; color:#756b58; font-size:.875rem; padding-inline:0; }
+.quest-app .lesson-practice .answer-action { min-width:150px; font-size:.9375rem; font-weight:600; }
+.quest-app .lesson-practice .quest-feedback p { font-size:1rem; line-height:1.75; }
+.quest-app .lesson-practice .theory-step-strip { margin-block:1.25rem; font-size:.8125rem; }
+.quest-app .lesson-practice .play-bottom { margin-block-start:1rem; font-size:.8125rem; line-height:1.6; }
+@media(max-width:1000px) {
+  .quest-app .lesson-intro { column-gap:2rem; padding-inline:1.5rem; }
+  .quest-app .intro-heading h1 { font-size:2rem; }
+}
+@media(max-width:900px) {
+  .quest-app .play-layout { display:block; }
+  .quest-app .lesson-intro { width:calc(100% - 2.5rem); max-width:820px; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); margin-block-start:1.25rem; }
+  .quest-app .intro-scene .brief-scene { height:auto; max-height:300px; }
+}
+@media(max-width:640px) {
+  .quest-app .lesson-intro { grid-template-columns:minmax(0,1fr); width:calc(100% - 2rem); padding:1rem 1.25rem 1.5rem; background:#fffaf0; row-gap:1.25rem; margin-block-start:1rem; }
+  .intro-topline { grid-column:auto; font-size:.8125rem; }
+  .quest-app .intro-scene .brief-scene { max-height:210px; width:100%; }
+  .intro-scene figcaption { margin-block-start:.25rem; font-size:.8125rem; }
+  .quest-app .intro-heading h1 { font-size:1.875rem; }
+  .intro-theory { font-size:1rem; margin-block-start:1rem; }
+  .intro-example { margin-block-start:1.25rem; }
+  .intro-start { margin-block-start:1.5rem; }
+  .quest-app .lesson-diagnostic { padding:1.25rem 1rem 2rem; }
+  .quest-app .lesson-diagnostic .diagnostic-card { padding:1.125rem 1.25rem 1.5rem; }
+  .quest-app .lesson-diagnostic .diagnostic-card__top { gap:.5rem; }
+  .quest-app .lesson-diagnostic .diagnostic-question { margin-block-start:1rem; }
+  .quest-app .lesson-diagnostic .diagnostic-question h1 { font-size:1.5rem; line-height:1.55; }
+  .quest-app .lesson-diagnostic .quest-options { margin-block-start:1.25rem; }
+  .quest-app .lesson-diagnostic .quest-option { padding:14px; gap:10px; }
+  .quest-app .lesson-diagnostic .quest-option--selected { padding:13px; }
+  .quest-app .lesson-diagnostic .quest-option strong { font-size:.9375rem; }
+  .quest-app .lesson-practice { padding:1.25rem 0 2rem; }
+  .quest-app .lesson-practice .question-sheet { padding:1.25rem; }
+  .quest-app .lesson-question { font-size:1.5rem; line-height:1.6; }
+  .quest-app .lesson-practice .number-line-builder__heading b { display:none; }
+  .quest-app .lesson-practice .number-line-builder { margin-block:1.25rem; }
+  .quest-app .number-line-builder__controls { gap:1.25rem; }
+  .quest-app .number-line-builder__controls button { font-size:.875rem; min-width:0; }
+  .quest-app .lesson-practice .sheet-actions { display:flex; flex-wrap:wrap; gap:.75rem; }
+  .quest-app .lesson-practice .hint-action { flex:0 0 auto; min-width:0; padding-inline:0; }
+  .quest-app .lesson-practice .answer-action { flex:1; min-width:120px; }
+  .quest-app .lesson-practice .play-bottom { display:none; }
+}
+
+/* Page number and ink rule anchor the lesson, from the first question to the answer. */
+.quest-app .lesson-practice .question-sheet {
+  --folio-ink: #193d67;
+  padding: clamp(1rem, 3.3vw, 2.5rem);
+  background: #fffcf4;
+  border-color: #c5ae82;
+}
+.lesson-folio { margin-block-end: clamp(1.25rem, 3vw, 2rem); }
+.quest-app .lesson-folio .sheet-header { margin: 0 0 .625rem; }
+.lesson-chapter { color: #73582c; font-size: .875rem; font-weight: 600; }
+.quest-app .lesson-folio .sheet-status {
+  color: var(--folio-ink);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.lesson-folio progress {
+  display: block;
+  width: 100%;
+  height: 4px;
+  appearance: none;
+  border: 0;
+  background: #ece2cd;
+  accent-color: #214d87;
+  border-radius: 3px;
+}
+.lesson-folio progress::-webkit-progress-bar { background: #ece2cd; border-radius: 3px; }
+.lesson-folio progress::-webkit-progress-value { background: #214d87; border-radius: 3px; }
+.lesson-folio progress::-moz-progress-bar { background: #214d87; border-radius: 3px; }
+.quest-app .lesson-question { color: var(--folio-ink); text-wrap: pretty; scroll-margin-block-start: 1rem; }
+.quest-app .lesson-question:focus, .quest-app .quest-feedback:focus { outline: none; }
+.quest-app .play-rail h2 { font-size: 1.15rem; line-height: 1.45; margin: .5rem 0 1rem; }
+.lesson-answer { min-width: 0; }
+.quest-app .lesson-practice .quest-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.quest-app :is(.lesson-practice, .lesson-diagnostic) .quest-option {
+  border: 2px solid #e4d8bf;
+  padding: 12px 15px;
+  box-shadow: 0 2px #e8ddc6;
+}
+.quest-app :is(.lesson-practice, .lesson-diagnostic) .quest-option:hover:not(:disabled) {
+  border-color: #a49270;
+  background: #f8f4e9;
+}
+.quest-app :is(.lesson-practice, .lesson-diagnostic) .quest-option--selected,
+.quest-app :is(.lesson-practice, .lesson-diagnostic) .quest-option--correct:disabled {
+  border-color: #315a89;
+  background: #eaf1f9;
+}
+.quest-app :is(.lesson-practice, .lesson-diagnostic) .quest-option--wrong:disabled {
+  border-color: #ad684e;
+  background: #fff0e8;
+}
+.quest-app .lesson-practice .line-instruction { color: #5b5140; font-size: 1rem; margin: 0 0 .5rem; }
+.quest-app .lesson-practice .number-line-builder { margin-block: 0 1.25rem; }
+.quest-app .lesson-practice .number-line-scroll svg { color: #193d67; }
+.line-tick-bed { fill: #d5b57617; }
+.line-tick-bed[data-selected=true] { fill: #214d8715; }
+.quest-app .lesson-practice .number-line-builder__tick:not([aria-disabled=true]):hover .line-hit-target { fill: #d5b57621; }
+.quest-app .lesson-practice .sheet-actions { justify-content: space-between; align-items: center; }
+.quest-app .lesson-practice .sheet-actions > :only-child { margin-inline-start: auto; }
+.quest-app .lesson-practice .hint-action { text-decoration: underline; text-underline-offset: 4px; }
+.lesson-hint {
+  border-inline-start: 3px solid #be9b59;
+  padding: .875rem 1rem;
+  margin-block-start: 1.25rem;
+  background: #fbf2dc;
+  color: #594324;
+}
+.lesson-hint p { margin: 0; line-height: 1.65; }
+.lesson-hint p b { margin-inline-end: .35rem; }
+.quest-app .lesson-hint .theory-step-strip { margin: .75rem 0 0; background: transparent; border: 0; padding: 0; }
+.quest-app :is(.lesson-practice, .lesson-diagnostic) .quest-feedback {
+  scroll-margin-block-start: 1.25rem;
+  margin-block: 1.5rem 0;
+  border-width: 0 0 0 3px;
+  border-radius: 0 8px 8px 0;
+  background: #edf3fa;
+  border-color: #315a89;
+}
+.quest-app :is(.lesson-practice, .lesson-diagnostic) .quest-feedback--wrong { background: #fcf0e6; border-color: #ad684e; }
+.quest-app .quest-feedback > div { min-width: 0; }
+.quest-app :is(.lesson-practice, .lesson-diagnostic) .quest-feedback strong {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.quest-app :is(.lesson-practice, .lesson-diagnostic) .quest-feedback p {
+  max-width: 64ch;
+  font-weight: 400;
+}
+.quest-app .quest-feedback .number-line { margin: .875rem 0 0; }
+.quest-app .atlas-pin.is-recommended b { background: #f4cf7a; color: #183557; border-color: #fff5d9; }
+.quest-app .atlas-pin.is-recommended span { background: #ffecc0; border-color: #926831; }
+.quest-app .atlas-pin:not(:disabled):hover span { background: #fff8e8; }
+@media(max-width: 760px) {
+  .quest-app .lesson-practice .quest-options { grid-template-columns: minmax(0, 1fr); }
+}
+@media(max-width: 640px) {
+  .quest-app .lesson-practice .number-line-builder__controls { grid-template-columns: minmax(0, 1fr); gap: .85rem; }
+  .quest-app .lesson-practice .sheet-actions button { min-height: 48px; }
+  .quest-app .lesson-practice .sheet-actions > :only-child { width: 100%; }
+  .quest-app .lesson-practice .quest-feedback { padding: 14px 12px; }
+}
